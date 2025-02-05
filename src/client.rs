@@ -1,6 +1,7 @@
 use pyo3::prelude::*;
-use std::net::IpAddr;
+use std::net::{IpAddr, SocketAddr, TcpStream};
 use std::str::FromStr;
+use std::time::Duration;
 
 pub fn init(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let child_module = PyModule::new_bound(parent_module.py(), "client")?;
@@ -18,6 +19,7 @@ struct GridborgClient {
     transport_channel_port: u16,
     username: String,
     password: String,
+    socket: Option<TcpStream>,
 }
 
 #[pymethods]
@@ -45,8 +47,36 @@ impl GridborgClient {
             transport_channel_port,
             username,
             password,
+            socket: None,
         })
     }
+
+    fn connect(&mut self) -> PyResult<()> {
+        let addr = SocketAddr::new(self.server, self.control_port);
+        match TcpStream::connect(addr) {
+            Ok(stream) => {
+                stream.set_read_timeout(Some(Duration::from_secs(5))).ok();
+                stream.set_write_timeout(Some(Duration::from_secs(5))).ok();
+                self.socket = Some(stream);
+                Ok(())
+            }
+            Err(e) => Err(pyo3::exceptions::PyIOError::new_err(format!(
+                "Failed to connect: {e}"
+            ))),
+        }
+    }
+
+    fn disconnect(&mut self) -> PyResult<()> {
+        if self.socket.is_some() {
+            self.socket = None;
+            Ok(())
+        } else {
+            Err(pyo3::exceptions::PyRuntimeError::new_err(
+                "No active connection to disconnect",
+            ))
+        }
+    }
+
     fn print_details(&self) {
         println!(
             "GridborgClient(server: {}, control_port: {}, transport_channel_port: {}, username: {}, password: {})",
