@@ -77,7 +77,6 @@ struct InBandSignalingDetectionDisable {}
 // Miscellaneous Commands
 struct GetRtpStatistics {}
 
-
 enum Command {
     ProtocolVersion,
     GetVersion,
