@@ -1,17 +1,24 @@
 use pyo3::prelude::*;
+use std::io::{BufRead, BufReader, Write};
 use std::net::{IpAddr, SocketAddr, TcpStream};
 use std::str::FromStr;
-use std::time::Duration;
+use std::thread;
 
 pub fn init(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let child_module = PyModule::new_bound(parent_module.py(), "client")?;
 
     child_module.add_class::<GridborgClient>()?;
 
-    // child_module.add_function(wrap_pyfunction!(mult_as_string, &child_module)?)?;
+    child_module.add_function(wrap_pyfunction!(sum_as_string, &child_module)?)?;
 
     parent_module.add_submodule(&child_module)
 }
+
+#[pyfunction]
+fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
+    Ok((a + b).to_string())
+}
+
 #[pyclass]
 struct GridborgClient {
     server: IpAddr,
@@ -20,6 +27,8 @@ struct GridborgClient {
     username: String,
     password: String,
     socket: Option<TcpStream>,
+    reader: Option<BufReader<TcpStream>>,
+    command_tag: u64,
 }
 
 #[pymethods]
@@ -48,6 +57,8 @@ impl GridborgClient {
             username,
             password,
             socket: None,
+            reader: None,
+            command_tag: 0,
         })
     }
 
@@ -55,9 +66,26 @@ impl GridborgClient {
         let addr = SocketAddr::new(self.server, self.control_port);
         match TcpStream::connect(addr) {
             Ok(stream) => {
-                stream.set_read_timeout(Some(Duration::from_secs(5))).ok();
-                stream.set_write_timeout(Some(Duration::from_secs(5))).ok();
+                stream.set_read_timeout(None).ok();
+                stream.set_write_timeout(None).ok();
+
+                let reader = BufReader::new(stream.try_clone()?);
                 self.socket = Some(stream);
+
+                thread::spawn(move || {
+                    let mut reader = reader;
+                    let mut line = String::new();
+
+                    while let Ok(bytes_read) = reader.read_line(&mut line) {
+                        if bytes_read == 0 {
+                            break;
+                        }
+                        println!("Received: {}", line.trim());
+                        line.clear();
+                    }
+                    println!("Connection closed.");
+                });
+
                 Ok(())
             }
             Err(e) => Err(pyo3::exceptions::PyIOError::new_err(format!(
@@ -73,6 +101,23 @@ impl GridborgClient {
         } else {
             Err(pyo3::exceptions::PyRuntimeError::new_err(
                 "No active connection to disconnect",
+            ))
+        }
+    }
+
+    fn send_raw_command(&mut self, message: String) -> PyResult<u64> {
+        if let Some(ref mut stream) = self.socket {
+            let msg = format!("{} COMMANDTAG={}\n", message, self.command_tag);
+            let msg_bytes = msg.into_bytes();
+            stream.write_all(&msg_bytes).map_err(|e| {
+                pyo3::exceptions::PyIOError::new_err(format!("Failed to send message: {e}"))
+            })?;
+            let tag = self.command_tag;
+            self.command_tag += 1;
+            Ok(tag)
+        } else {
+            Err(pyo3::exceptions::PyRuntimeError::new_err(
+                "No active connection to send message",
             ))
         }
     }
