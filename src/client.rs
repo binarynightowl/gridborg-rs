@@ -4,6 +4,8 @@ use std::net::{IpAddr, SocketAddr, TcpStream};
 use std::str::FromStr;
 use std::thread;
 
+use crate::commands::{Command, CommandHandler, GetVersion, Logout, ProtocolVersion, Quit};
+
 pub fn init(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let child_module = PyModule::new_bound(parent_module.py(), "client")?;
 
@@ -28,6 +30,7 @@ struct GridborgClient {
     password: String,
     socket: Option<TcpStream>,
     reader: Option<BufReader<TcpStream>>,
+    #[pyo3(get)]
     command_tag: u64,
 }
 
@@ -122,10 +125,61 @@ impl GridborgClient {
         }
     }
 
+    fn send_command(&mut self, command: Command) -> PyResult<u64> {
+        self.send_raw_command(command.into())
+    }
+
+    fn get_version(&mut self) -> PyResult<()> {
+        CommandHandler::get_version(self)
+    }
+
+    fn get_protocol_version(&mut self) -> PyResult<()> {
+        CommandHandler::get_protocol_version(self)
+    }
+
+    fn login(&mut self) -> PyResult<()> {
+        CommandHandler::login(self)
+    }
+
+    fn logout(&mut self) -> PyResult<()> {
+        CommandHandler::logout(self)
+    }
+
+    fn quit(&mut self) -> PyResult<()> {
+        CommandHandler::quit(self)
+    }
+
     fn print_details(&self) {
         println!(
             "GridborgClient(server: {}, control_port: {}, transport_channel_port: {}, username: {}, password: {})",
             self.server, self.control_port, self.transport_channel_port, self.username, self.password
         );
+    }
+}
+
+impl CommandHandler for GridborgClient {
+    fn get_version(&mut self) -> PyResult<()> {
+        self.send_command(Command::GetVersion(GetVersion)).expect("TODO: panic message");
+        Ok(())
+    }
+
+    fn get_protocol_version(&mut self) -> PyResult<()> {
+        self.send_command(Command::ProtocolVersion(ProtocolVersion)).expect("TODO: panic message");
+        Ok(())
+    }
+
+    fn login(&mut self) -> PyResult<()> {
+        self.send_command(Command::login(self.username.clone(), self.password.clone(), None, None, None)).expect("TODO: panic message");
+        Ok(())
+    }
+
+    fn logout(&mut self) -> PyResult<()> {
+        self.send_command(Command::Logout(Logout)).expect("TODO: panic message");
+        Ok(())
+    }
+
+    fn quit(&mut self) -> PyResult<()> {
+        self.send_command(Command::Quit(Quit)).expect("TODO: panic message");
+        Ok(())
     }
 }
