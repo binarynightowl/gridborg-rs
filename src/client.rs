@@ -129,6 +129,7 @@ impl GridborgClient {
         self.send_raw_command(command.into())
     }
 
+    // Product Information Commands
     fn get_version(&mut self) -> PyResult<()> {
         CommandHandler::get_version(self)
     }
@@ -137,6 +138,7 @@ impl GridborgClient {
         CommandHandler::get_protocol_version(self)
     }
 
+    // Session Commands
     fn login(&mut self) -> PyResult<()> {
         CommandHandler::login(self)
     }
@@ -149,6 +151,63 @@ impl GridborgClient {
         CommandHandler::quit(self)
     }
 
+    fn resource_create_frontend(
+        &mut self,
+        reg_incoming_ani: Option<String>,
+        reg_incoming_dnis: Option<String>,
+        reg_incoming_rdn: Option<String>,
+        accepting: Option<bool>,
+    ) -> PyResult<()> {
+        CommandHandler::resource_create_frontend(
+            self,
+            reg_incoming_ani,
+            reg_incoming_dnis,
+            reg_incoming_rdn,
+            accepting,
+        )
+    }
+
+    fn resource_create_player(&mut self) -> PyResult<()> {
+        CommandHandler::resource_create_player(self)
+    }
+
+    fn resource_create_recorder(&mut self) -> PyResult<()> {
+        CommandHandler::resource_create_recorder(self)
+    }
+
+    fn resource_create_transport_channel(&mut self, transport_type: String) -> PyResult<()> {
+        CommandHandler::resource_create_transport_channel(self, transport_type)
+    }
+
+    fn resource_create_rtp_channel(&mut self, in_band_dtmf_enabled: Option<bool>) -> PyResult<()> {
+        CommandHandler::resource_create_rtp_channel(self, in_band_dtmf_enabled)
+    }
+
+    fn resource_create_sound_device(
+        &mut self,
+        direction: String,
+        device: Option<String>,
+        buffers: Option<u8>,
+    ) -> PyResult<()> {
+        CommandHandler::resource_create_sound_device(self, direction, device, buffers)
+    }
+
+    fn resource_create_fax(&mut self) -> PyResult<()> {
+        CommandHandler::resource_create_fax(self)
+    }
+
+    fn resource_create_document(&mut self) -> PyResult<()> {
+        CommandHandler::resource_create_document(self)
+    }
+
+    fn resource_delete(&mut self, resource_id: u32) -> PyResult<()> {
+        CommandHandler::resource_delete(self, resource_id)
+    }
+
+    fn resource_get_status(&mut self, resource_id: u32) -> PyResult<()> {
+        CommandHandler::resource_get_status(self, resource_id)
+    }
+
     fn print_details(&self) {
         println!(
             "GridborgClient(server: {}, control_port: {}, transport_channel_port: {}, username: {}, password: {})",
@@ -158,28 +217,120 @@ impl GridborgClient {
 }
 
 impl CommandHandler for GridborgClient {
+    // Product Information Commands
     fn get_version(&mut self) -> PyResult<()> {
-        self.send_command(Command::GetVersion(GetVersion)).expect("TODO: panic message");
+        self.send_command(Command::get_version())
+            .expect("TODO: panic message");
         Ok(())
     }
 
     fn get_protocol_version(&mut self) -> PyResult<()> {
-        self.send_command(Command::ProtocolVersion(ProtocolVersion)).expect("TODO: panic message");
+        self.send_command(Command::protocol_version())
+            .expect("TODO: panic message");
         Ok(())
     }
 
+    // Session Commands
     fn login(&mut self) -> PyResult<()> {
-        self.send_command(Command::login(self.username.clone(), self.password.clone(), None, None, None)).expect("TODO: panic message");
+        self.send_command(Command::login(
+            self.username.clone(),
+            self.password.clone(),
+            None,
+            None,
+            None,
+        ))
+        .expect("TODO: panic message");
         Ok(())
     }
 
     fn logout(&mut self) -> PyResult<()> {
-        self.send_command(Command::Logout(Logout)).expect("TODO: panic message");
+        self.send_command(Command::logout())
+            .expect("TODO: panic message");
         Ok(())
     }
 
     fn quit(&mut self) -> PyResult<()> {
-        self.send_command(Command::Quit(Quit)).expect("TODO: panic message");
+        self.send_command(Command::quit())
+            .expect("TODO: panic message");
+        Ok(())
+    }
+
+    // General Resource Commands
+    fn resource_create_frontend(
+        &mut self,
+        reg_incoming_ani: Option<String>,
+        reg_incoming_dnis: Option<String>,
+        reg_incoming_rdn: Option<String>,
+        accepting: Option<bool>,
+    ) -> PyResult<()> {
+        self.send_command(Command::resource_create_frontend(
+            reg_incoming_ani,
+            reg_incoming_dnis,
+            reg_incoming_rdn,
+            accepting,
+        ))
+        .expect("TODO: panic message");
+        Ok(())
+    }
+
+    fn resource_create_player(&mut self) -> PyResult<()> {
+        self.send_command(Command::resource_create_player())
+            .expect("TODO: panic message");
+        Ok(())
+    }
+
+    fn resource_create_recorder(&mut self) -> PyResult<()> {
+        self.send_command(Command::resource_create_recorder())
+            .expect("TODO: panic message");
+        Ok(())
+    }
+
+    fn resource_create_transport_channel(&mut self, transport_type: String) -> PyResult<()> {
+        self.send_command(Command::resource_create_transport_channel(transport_type))
+            .expect("TODO: panic message");
+        Ok(())
+    }
+
+    fn resource_create_rtp_channel(&mut self, in_band_dtmf_enabled: Option<bool>) -> PyResult<()> {
+        self.send_command(Command::resource_create_rtp_channel(in_band_dtmf_enabled))
+            .expect("TODO: panic message");
+        Ok(())
+    }
+
+    fn resource_create_sound_device(
+        &mut self,
+        direction: String,
+        device: Option<String>,
+        buffers: Option<u8>,
+    ) -> PyResult<()> {
+        self.send_command(Command::resource_create_sound_device(
+            direction, device, buffers,
+        ))
+        .expect("TODO: panic message");
+        Ok(())
+    }
+
+    fn resource_create_fax(&mut self) -> PyResult<()> {
+        self.send_command(Command::resource_create_fax())
+            .expect("TODO: panic message");
+        Ok(())
+    }
+
+    fn resource_create_document(&mut self) -> PyResult<()> {
+        self.send_command(Command::resource_create_fax())
+            .expect("TODO: panic message");
+        Ok(())
+    }
+
+    fn resource_delete(&mut self, resource_id: u32) -> PyResult<()> {
+        self.send_command(Command::resource_delete(resource_id))
+            .expect("TODO: panic message");
+        Ok(())
+    }
+
+    fn resource_get_status(&mut self, resource_id: u32) -> PyResult<()> {
+        self.send_command(Command::resource_get_status(resource_id))
+            .expect("TODO: panic message");
         Ok(())
     }
 }

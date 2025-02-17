@@ -39,34 +39,51 @@ pub struct Quit;
 // General Resource Commands
 #[pyclass]
 #[derive(Clone)]
-struct ResourceCreateFrontEnd {}
+struct ResourceCreateFrontEnd {
+    reg_incoming_ani: Option<String>,
+    reg_incoming_dnis: Option<String>,
+    reg_incoming_rdn: Option<String>,
+    accepting: Option<bool>,
+}
 #[pyclass]
 #[derive(Clone)]
-struct ResourceCreatePlayer {}
+struct ResourceCreatePlayer;
 #[pyclass]
 #[derive(Clone)]
-struct ResourceCreateRecorder {}
+struct ResourceCreateRecorder;
 #[pyclass]
 #[derive(Clone)]
-struct ResourceCreateTransportChannel {}
+struct ResourceCreateTransportChannel {
+    transport_type: String,
+}
 #[pyclass]
 #[derive(Clone)]
-struct ResourceCreateRtpChannel {}
+struct ResourceCreateRtpChannel {
+    in_band_dtmf_enabled: Option<bool>,
+}
 #[pyclass]
 #[derive(Clone)]
-struct ResourceCreateSoundDevice {}
+struct ResourceCreateSoundDevice {
+    direction: String,
+    device: Option<String>,
+    buffers: Option<u8>,
+}
 #[pyclass]
 #[derive(Clone)]
-struct ResourceCreateFax {}
+struct ResourceCreateFax;
 #[pyclass]
 #[derive(Clone)]
-struct ResourceCreateDocument {}
+struct ResourceCreateDocument;
 #[pyclass]
 #[derive(Clone)]
-struct ResourceDelete {}
+struct ResourceDelete {
+    resource_id: u32,
+}
 #[pyclass]
 #[derive(Clone)]
-struct ResourceGetStatus {}
+struct ResourceGetStatus {
+    resource_id: u32,
+}
 
 // Front-end Resource Commands
 #[pyclass]
@@ -268,6 +285,18 @@ pub enum Command {
 
 #[pymethods]
 impl Command {
+    // Product Information Commands
+    #[staticmethod]
+    pub fn protocol_version() -> Self {
+        Command::ProtocolVersion(ProtocolVersion {})
+    }
+
+    #[staticmethod]
+    pub fn get_version() -> Self {
+        Command::GetVersion(GetVersion {})
+    }
+
+    // Session Commands
     #[staticmethod]
     pub fn login(
         username: String,
@@ -286,13 +315,97 @@ impl Command {
             protocol_revision: revision,
         })
     }
+
+    #[staticmethod]
+    pub fn logout() -> Self {
+        Command::Logout(Logout {})
+    }
+
+    #[staticmethod]
+    pub fn quit() -> Self {
+        Command::Quit(Quit {})
+    }
+
+    // General Resource Commands
+    #[staticmethod]
+    pub fn resource_create_frontend(
+        reg_incoming_ani: Option<String>,
+        reg_incoming_dnis: Option<String>,
+        reg_incoming_rdn: Option<String>,
+        accepting: Option<bool>,
+    ) -> Self {
+        Command::ResourceCreateFrontEnd(ResourceCreateFrontEnd {
+            reg_incoming_ani,
+            reg_incoming_dnis,
+            reg_incoming_rdn,
+            accepting,
+        })
+    }
+
+    #[staticmethod]
+    pub fn resource_create_player() -> Self {
+        Command::ResourceCreatePlayer(ResourceCreatePlayer {})
+    }
+
+    #[staticmethod]
+    pub fn resource_create_recorder() -> Self {
+        Command::ResourceCreateRecorder(ResourceCreateRecorder {})
+    }
+
+    #[staticmethod]
+    pub fn resource_create_transport_channel(transport_type: String) -> Self {
+        Command::ResourceCreateTransportChannel(ResourceCreateTransportChannel { transport_type })
+    }
+
+    #[staticmethod]
+    pub fn resource_create_rtp_channel(in_band_dtmf_enabled: Option<bool>) -> Self {
+        Command::ResourceCreateRtpChannel(ResourceCreateRtpChannel {
+            in_band_dtmf_enabled,
+        })
+    }
+
+    #[staticmethod]
+    pub fn resource_create_sound_device(
+        direction: String,
+        device: Option<String>,
+        buffers: Option<u8>,
+    ) -> Self {
+        Command::ResourceCreateSoundDevice(ResourceCreateSoundDevice {
+            direction,
+            device,
+            buffers,
+        })
+    }
+
+    #[staticmethod]
+    pub fn resource_create_fax() -> Self {
+        Command::ResourceCreateFax(ResourceCreateFax {})
+    }
+
+    #[staticmethod]
+    pub fn resource_create_document() -> Self {
+        Command::ResourceCreateDocument(ResourceCreateDocument {})
+    }
+
+    #[staticmethod]
+    pub fn resource_delete(resource_id: u32) -> Self {
+        Command::ResourceDelete(ResourceDelete { resource_id })
+    }
+
+    #[staticmethod]
+    pub fn resource_get_status(resource_id: u32) -> Self {
+        Command::ResourceGetStatus(ResourceGetStatus { resource_id })
+    }
 }
 
 impl fmt::Display for Command {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            // Product Information Commands
             Command::ProtocolVersion(_) => write!(f, "ProtocolVersion"),
             Command::GetVersion(_) => write!(f, "GetVersion"),
+
+            // Session Commands
             Command::Login(login) => {
                 if let Some(revision) = login.protocol_revision {
                     write!(
@@ -317,6 +430,51 @@ impl fmt::Display for Command {
             }
             Command::Logout(_) => write!(f, "Logout"),
             Command::Quit(_) => write!(f, "Quit"),
+
+            // General Resource Commands
+            Command::ResourceCreateFrontEnd(cmd) => {
+                write!(f, "ResourceCreateFrontEnd")?;
+                if let Some(ani) = &cmd.reg_incoming_ani {
+                    write!(f, " RegIncomingANI={}", ani)?;
+                }
+                if let Some(dnis) = &cmd.reg_incoming_dnis {
+                    write!(f, " RegIncomingDNIS={}", dnis)?;
+                }
+                if let Some(rdn) = &cmd.reg_incoming_rdn {
+                    write!(f, " RegIncomingRDN={}", rdn)?;
+                }
+                if let Some(accepting) = cmd.accepting {
+                    write!(f, " Accepting={}", if accepting { 1 } else { 0 })?;
+                }
+                Ok(())
+            }
+            Command::ResourceCreatePlayer(_) => write!(f, "ResourceCreatePlayer"),
+            Command::ResourceCreateRecorder(_) => write!(f, "ResourceCreateRecorder"),
+            Command::ResourceCreateTransportChannel(cmd) => {
+                write!(f, "ResourceCreateTransportChannel {}", cmd.transport_type)
+            }
+            Command::ResourceCreateRtpChannel(cmd) => {
+                write!(f, "ResourceCreateRtpChannel")?;
+                if let Some(enabled) = cmd.in_band_dtmf_enabled {
+                    write!(f, " InBandDTMFEnabled={}", if enabled { 1 } else { 0 })?;
+                }
+                Ok(())
+            }
+            Command::ResourceCreateSoundDevice(cmd) => {
+                write!(f, "ResourceCreateSoundDevice Direction={}", cmd.direction)?;
+                if let Some(device) = &cmd.device {
+                    write!(f, " Device={}", device)?;
+                }
+                if let Some(buffers) = cmd.buffers {
+                    write!(f, " Buffers={}", buffers)?;
+                }
+                Ok(())
+            }
+            Command::ResourceCreateFax(_) => write!(f, "ResourceCreateFax"),
+            Command::ResourceCreateDocument(_) => write!(f, "ResourceCreateDocument"),
+            Command::ResourceDelete(cmd) => write!(f, "ResourceDelete {}", cmd.resource_id),
+            Command::ResourceGetStatus(cmd) => write!(f, "ResourceGetStatus {}", cmd.resource_id),
+
             _ => write!(f, "Unimplemented Command"),
         }
     }
@@ -329,9 +487,40 @@ impl Into<String> for Command {
 }
 
 pub trait CommandHandler: Send + Sync {
+    // Product Information Commands
     fn get_version(&mut self) -> PyResult<()>;
     fn get_protocol_version(&mut self) -> PyResult<()>;
     fn login(&mut self) -> PyResult<()>;
+    // fn login(&mut self, username: String, password: String, major: Option<u8>, minor: Option<u8>, revision: Option<u8>) -> PyResult<()>;
     fn logout(&mut self) -> PyResult<()>;
     fn quit(&mut self) -> PyResult<()>;
+
+    // General Resource Commands
+    fn resource_create_frontend(
+        &mut self,
+        reg_incoming_ani: Option<String>,
+        reg_incoming_dnis: Option<String>,
+        reg_incoming_rdn: Option<String>,
+        accepting: Option<bool>,
+    ) -> PyResult<()>;
+
+    fn resource_create_player(&mut self) -> PyResult<()>;
+    fn resource_create_recorder(&mut self) -> PyResult<()>;
+    fn resource_create_transport_channel(&mut self, transport_type: String) -> PyResult<()>;
+
+    fn resource_create_rtp_channel(&mut self, in_band_dtmf_enabled: Option<bool>) -> PyResult<()>;
+
+    fn resource_create_sound_device(
+        &mut self,
+        direction: String,
+        device: Option<String>,
+        buffers: Option<u8>,
+    ) -> PyResult<()>;
+
+    fn resource_create_fax(&mut self) -> PyResult<()>;
+    fn resource_create_document(&mut self) -> PyResult<()>;
+
+    fn resource_delete(&mut self, resource_id: u32) -> PyResult<()>;
+    fn resource_get_status(&mut self, resource_id: u32) -> PyResult<()>;
 }
+
