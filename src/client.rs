@@ -4,7 +4,7 @@ use std::net::{IpAddr, SocketAddr, TcpStream};
 use std::str::FromStr;
 use std::thread;
 
-use crate::commands::{Command, CommandHandler, GetVersion, Logout, ProtocolVersion, Quit};
+use crate::commands::{Command, CommandHandler};
 
 pub fn init(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let child_module = PyModule::new_bound(parent_module.py(), "client")?;

@@ -1,5 +1,5 @@
 use pyo3::prelude::{PyModule, PyModuleMethods};
-use pyo3::{pyclass, pymethods, wrap_pyfunction, Bound, PyResult};
+use pyo3::{pyclass, pymethods, Bound, PyResult};
 use std::fmt;
 
 pub fn init(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
@@ -705,9 +705,9 @@ impl fmt::Display for Command {
     }
 }
 
-impl Into<String> for Command {
-    fn into(self) -> String {
-        self.to_string()
+impl From<Command> for String {
+    fn from(val: Command) -> Self {
+        val.to_string()
     }
 }
 
