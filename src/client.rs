@@ -269,7 +269,14 @@ impl GridborgClient {
         delay: Option<u32>,
         pause_duration: Option<u32>,
     ) -> PyResult<()> {
-        CommandHandler::call_send_dtmf(self, resource_id, dtmf_string, duration, delay, pause_duration)
+        CommandHandler::call_send_dtmf(
+            self,
+            resource_id,
+            dtmf_string,
+            duration,
+            delay,
+            pause_duration,
+        )
     }
 
     fn call_stop_activity(&mut self, resource_id: u32) -> PyResult<()> {
@@ -434,7 +441,7 @@ impl CommandHandler for GridborgClient {
             privacy,
             screen,
         ))
-            .expect("call_make failed");
+        .expect("call_make failed");
         Ok(())
     }
 
@@ -451,8 +458,11 @@ impl CommandHandler for GridborgClient {
     }
 
     fn call_transfer_consultation(&mut self, resource_id1: u32, resource_id2: u32) -> PyResult<()> {
-        self.send_command(Command::call_transfer_consultation(resource_id1, resource_id2))
-            .expect("call_transfer_consultation failed");
+        self.send_command(Command::call_transfer_consultation(
+            resource_id1,
+            resource_id2,
+        ))
+        .expect("call_transfer_consultation failed");
         Ok(())
     }
 
@@ -487,8 +497,14 @@ impl CommandHandler for GridborgClient {
         delay: Option<u32>,
         pause_duration: Option<u32>,
     ) -> PyResult<()> {
-        self.send_command(Command::call_send_dtmf(resource_id, dtmf_string, duration, delay, pause_duration))
-            .expect("call_send_dtmf failed");
+        self.send_command(Command::call_send_dtmf(
+            resource_id,
+            dtmf_string,
+            duration,
+            delay,
+            pause_duration,
+        ))
+        .expect("call_send_dtmf failed");
         Ok(())
     }
 

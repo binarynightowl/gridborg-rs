@@ -38,7 +38,7 @@ pub struct Quit;
 // General Resource Commands
 #[pyclass]
 #[derive(Clone)]
-struct ResourceCreateFrontEnd {
+pub struct ResourceCreateFrontEnd {
     reg_incoming_ani: Option<String>,
     reg_incoming_dnis: Option<String>,
     reg_incoming_rdn: Option<String>,
@@ -167,102 +167,102 @@ pub struct CallsSetAccepting {
 // Player Resource Commands
 #[pyclass]
 #[derive(Clone)]
-struct PlayFile {}
+pub struct PlayFile {}
 #[pyclass]
 #[derive(Clone)]
-struct PlayStream {}
+pub struct PlayStream {}
 #[pyclass]
 #[derive(Clone)]
-struct PlayTone {}
+pub struct PlayTone {}
 #[pyclass]
 #[derive(Clone)]
-struct PlayStop {}
+pub struct PlayStop {}
 
 // Recorder Resource Commands
 #[pyclass]
 #[derive(Clone)]
-struct RecorderStartToFile {}
+pub struct RecorderStartToFile {}
 #[pyclass]
 #[derive(Clone)]
-struct RecorderStartToStream {}
+pub struct RecorderStartToStream {}
 #[pyclass]
 #[derive(Clone)]
-struct RecorderStop {}
+pub struct RecorderStop {}
 
 // RTP Channel Resource Commands
 #[pyclass]
 #[derive(Clone)]
-struct RtpChannelStartReceiving {}
+pub struct RtpChannelStartReceiving {}
 #[pyclass]
 #[derive(Clone)]
-struct RtpChannelStartSending {}
+pub struct RtpChannelStartSending {}
 #[pyclass]
 #[derive(Clone)]
-struct RtpChannelStop {}
+pub struct RtpChannelStop {}
 #[pyclass]
 #[derive(Clone)]
-struct RtpChannelSendDTMF {}
+pub struct RtpChannelSendDTMF {}
 
 // Sound device Resource Commands
 #[pyclass]
 #[derive(Clone)]
-struct SoundDeviceStart {}
+pub struct SoundDeviceStart {}
 #[pyclass]
 #[derive(Clone)]
-struct SoundDeviceStop {}
+pub struct SoundDeviceStop {}
 
 // Fax Resource Commands
 #[pyclass]
 #[derive(Clone)]
-struct FaxReceive {}
+pub struct FaxReceive {}
 #[pyclass]
 #[derive(Clone)]
-struct DocumentResourceId {}
+pub struct DocumentResourceId {}
 #[pyclass]
 #[derive(Clone)]
-struct FaxSend {}
+pub struct FaxSend {}
 #[pyclass]
 #[derive(Clone)]
-struct FaxAbort {}
+pub struct FaxAbort {}
 
 // Document Resource Commands
 #[pyclass]
 #[derive(Clone)]
-struct DocumentAddFile {}
+pub struct DocumentAddFile {}
 #[pyclass]
 #[derive(Clone)]
-struct DocumentPrepare {}
+pub struct DocumentPrepare {}
 #[pyclass]
 #[derive(Clone)]
-struct DocumentSave {}
+pub struct DocumentSave {}
 #[pyclass]
 #[derive(Clone)]
-struct DocumentClear {}
+pub struct DocumentClear {}
 
 // Audio Routing and Audio Stream Monitoring Commands
 #[pyclass]
 #[derive(Clone)]
-struct AudioSend {}
+pub struct AudioSend {}
 #[pyclass]
 #[derive(Clone)]
-struct AudioCancel {}
+pub struct AudioCancel {}
 #[pyclass]
 #[derive(Clone)]
-struct AudioLevelNotificationSend {}
+pub struct AudioLevelNotificationSend {}
 #[pyclass]
 #[derive(Clone)]
-struct AudioLevelNotificationCancel {}
+pub struct AudioLevelNotificationCancel {}
 #[pyclass]
 #[derive(Clone)]
-struct InBandSignalingDetectionEnable {}
+pub struct InBandSignalingDetectionEnable {}
 #[pyclass]
 #[derive(Clone)]
-struct InBandSignalingDetectionDisable {}
+pub struct InBandSignalingDetectionDisable {}
 
 // Miscellaneous Commands
 #[pyclass]
 #[derive(Clone)]
-struct GetRtpStatistics {}
+pub struct GetRtpStatistics {}
 
 #[pyclass(str)]
 #[derive(Clone)]
