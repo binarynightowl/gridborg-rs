@@ -151,6 +151,7 @@ impl GridborgClient {
         CommandHandler::quit(self)
     }
 
+    // General Resource Commands
     fn resource_create_frontend(
         &mut self,
         reg_incoming_ani: Option<String>,
@@ -206,6 +207,85 @@ impl GridborgClient {
 
     fn resource_get_status(&mut self, resource_id: u32) -> PyResult<()> {
         CommandHandler::resource_get_status(self, resource_id)
+    }
+
+    // Front-end Resource Commands
+    fn call_make(
+        &mut self,
+        resource_id: u32,
+        address: String,
+        timeout: Option<u32>,
+        caller_number: Option<String>,
+        caller_name: Option<String>,
+        privacy: Option<u8>,
+        screen: Option<u8>,
+    ) -> PyResult<()> {
+        CommandHandler::call_make(
+            self,
+            resource_id,
+            address,
+            timeout,
+            caller_number,
+            caller_name,
+            privacy,
+            screen,
+        )
+    }
+
+    fn call_answer(&mut self, resource_id: u32) -> PyResult<()> {
+        CommandHandler::call_answer(self, resource_id)
+    }
+
+    fn call_clear(&mut self, resource_id: u32, reason: Option<String>) -> PyResult<()> {
+        CommandHandler::call_clear(self, resource_id, reason)
+    }
+
+    fn call_transfer_consultation(&mut self, resource_id1: u32, resource_id2: u32) -> PyResult<()> {
+        CommandHandler::call_transfer_consultation(self, resource_id1, resource_id2)
+    }
+
+    fn call_transfer_blind(
+        &mut self,
+        resource_id: u32,
+        address: String,
+        use_h450: Option<u8>,
+    ) -> PyResult<()> {
+        CommandHandler::call_transfer_blind(self, resource_id, address, use_h450)
+    }
+
+    fn call_hold(&mut self, resource_id: u32) -> PyResult<()> {
+        CommandHandler::call_hold(self, resource_id)
+    }
+
+    fn call_retrieve(&mut self, resource_id: u32) -> PyResult<()> {
+        CommandHandler::call_retrieve(self, resource_id)
+    }
+
+    fn call_send_dtmf(
+        &mut self,
+        resource_id: u32,
+        dtmf_string: String,
+        duration: Option<u32>,
+        delay: Option<u32>,
+        pause_duration: Option<u32>,
+    ) -> PyResult<()> {
+        CommandHandler::call_send_dtmf(self, resource_id, dtmf_string, duration, delay, pause_duration)
+    }
+
+    fn call_stop_activity(&mut self, resource_id: u32) -> PyResult<()> {
+        CommandHandler::call_stop_activity(self, resource_id)
+    }
+
+    fn call_t38_relay(&mut self, resource_id1: u32, resource_id2: u32) -> PyResult<()> {
+        CommandHandler::call_t38_relay(self, resource_id1, resource_id2)
+    }
+
+    fn calls_set_alerting_type(&mut self, resource_id: u32, alerting_type: String) -> PyResult<()> {
+        CommandHandler::calls_set_alerting_type(self, resource_id, alerting_type)
+    }
+
+    fn calls_set_accepting(&mut self, resource_id: u32, accepting: bool) -> PyResult<()> {
+        CommandHandler::calls_set_accepting(self, resource_id, accepting)
     }
 
     fn print_details(&self) {
@@ -331,6 +411,108 @@ impl CommandHandler for GridborgClient {
     fn resource_get_status(&mut self, resource_id: u32) -> PyResult<()> {
         self.send_command(Command::resource_get_status(resource_id))
             .expect("TODO: panic message");
+        Ok(())
+    }
+
+    // Front-end Resource Commands
+    fn call_make(
+        &mut self,
+        resource_id: u32,
+        address: String,
+        timeout: Option<u32>,
+        caller_number: Option<String>,
+        caller_name: Option<String>,
+        privacy: Option<u8>,
+        screen: Option<u8>,
+    ) -> PyResult<()> {
+        self.send_command(Command::call_make(
+            resource_id,
+            address,
+            timeout,
+            caller_number,
+            caller_name,
+            privacy,
+            screen,
+        ))
+            .expect("call_make failed");
+        Ok(())
+    }
+
+    fn call_answer(&mut self, resource_id: u32) -> PyResult<()> {
+        self.send_command(Command::call_answer(resource_id))
+            .expect("call_answer failed");
+        Ok(())
+    }
+
+    fn call_clear(&mut self, resource_id: u32, reason: Option<String>) -> PyResult<()> {
+        self.send_command(Command::call_clear(resource_id, reason))
+            .expect("call_clear failed");
+        Ok(())
+    }
+
+    fn call_transfer_consultation(&mut self, resource_id1: u32, resource_id2: u32) -> PyResult<()> {
+        self.send_command(Command::call_transfer_consultation(resource_id1, resource_id2))
+            .expect("call_transfer_consultation failed");
+        Ok(())
+    }
+
+    fn call_transfer_blind(
+        &mut self,
+        resource_id: u32,
+        address: String,
+        use_h450: Option<u8>,
+    ) -> PyResult<()> {
+        self.send_command(Command::call_transfer_blind(resource_id, address, use_h450))
+            .expect("call_transfer_blind failed");
+        Ok(())
+    }
+
+    fn call_hold(&mut self, resource_id: u32) -> PyResult<()> {
+        self.send_command(Command::call_hold(resource_id))
+            .expect("call_hold failed");
+        Ok(())
+    }
+
+    fn call_retrieve(&mut self, resource_id: u32) -> PyResult<()> {
+        self.send_command(Command::call_retrieve(resource_id))
+            .expect("call_retrieve failed");
+        Ok(())
+    }
+
+    fn call_send_dtmf(
+        &mut self,
+        resource_id: u32,
+        dtmf_string: String,
+        duration: Option<u32>,
+        delay: Option<u32>,
+        pause_duration: Option<u32>,
+    ) -> PyResult<()> {
+        self.send_command(Command::call_send_dtmf(resource_id, dtmf_string, duration, delay, pause_duration))
+            .expect("call_send_dtmf failed");
+        Ok(())
+    }
+
+    fn call_stop_activity(&mut self, resource_id: u32) -> PyResult<()> {
+        self.send_command(Command::call_stop_activity(resource_id))
+            .expect("call_stop_activity failed");
+        Ok(())
+    }
+
+    fn call_t38_relay(&mut self, resource_id1: u32, resource_id2: u32) -> PyResult<()> {
+        self.send_command(Command::call_t38_relay(resource_id1, resource_id2))
+            .expect("call_t38_relay failed");
+        Ok(())
+    }
+
+    fn calls_set_alerting_type(&mut self, resource_id: u32, alerting_type: String) -> PyResult<()> {
+        self.send_command(Command::calls_set_alerting_type(resource_id, alerting_type))
+            .expect("calls_set_alerting_type failed");
+        Ok(())
+    }
+
+    fn calls_set_accepting(&mut self, resource_id: u32, accepting: bool) -> PyResult<()> {
+        self.send_command(Command::calls_set_accepting(resource_id, accepting))
+            .expect("calls_set_accepting failed");
         Ok(())
     }
 }

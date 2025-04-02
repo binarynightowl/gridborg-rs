@@ -21,14 +21,13 @@ pub struct GetVersion;
 // Session Commands
 #[pyclass]
 #[derive(Clone)]
-struct Login {
+pub struct Login {
     username: String,
     password: String,
     protocol_major_version: u8,
     protocol_minor_version: u8,
     protocol_revision: Option<u8>,
 }
-
 #[pyclass]
 #[derive(Clone)]
 pub struct Logout;
@@ -47,81 +46,123 @@ struct ResourceCreateFrontEnd {
 }
 #[pyclass]
 #[derive(Clone)]
-struct ResourceCreatePlayer;
+pub struct ResourceCreatePlayer;
 #[pyclass]
 #[derive(Clone)]
-struct ResourceCreateRecorder;
+pub struct ResourceCreateRecorder;
 #[pyclass]
 #[derive(Clone)]
-struct ResourceCreateTransportChannel {
+pub struct ResourceCreateTransportChannel {
     transport_type: String,
 }
 #[pyclass]
 #[derive(Clone)]
-struct ResourceCreateRtpChannel {
+pub struct ResourceCreateRtpChannel {
     in_band_dtmf_enabled: Option<bool>,
 }
 #[pyclass]
 #[derive(Clone)]
-struct ResourceCreateSoundDevice {
+pub struct ResourceCreateSoundDevice {
     direction: String,
     device: Option<String>,
     buffers: Option<u8>,
 }
 #[pyclass]
 #[derive(Clone)]
-struct ResourceCreateFax;
+pub struct ResourceCreateFax;
 #[pyclass]
 #[derive(Clone)]
-struct ResourceCreateDocument;
+pub struct ResourceCreateDocument;
 #[pyclass]
 #[derive(Clone)]
-struct ResourceDelete {
+pub struct ResourceDelete {
     resource_id: u32,
 }
 #[pyclass]
 #[derive(Clone)]
-struct ResourceGetStatus {
+pub struct ResourceGetStatus {
     resource_id: u32,
 }
 
 // Front-end Resource Commands
 #[pyclass]
 #[derive(Clone)]
-struct CallMake {}
+pub struct CallMake {
+    resource_id: u32,
+    address: String,
+    timeout: Option<u32>, // Default: 30000 ms
+    caller_number: Option<String>,
+    caller_name: Option<String>,
+    privacy: Option<u8>, // Default: 0
+    screen: Option<u8>,  // Default: 1
+}
 #[pyclass]
 #[derive(Clone)]
-struct CallAnswer {}
+pub struct CallAnswer {
+    resource_id: u32,
+}
 #[pyclass]
 #[derive(Clone)]
-struct CallClear {}
+pub struct CallClear {
+    resource_id: u32,
+    reason: Option<String>, // Optional reason string
+}
 #[pyclass]
 #[derive(Clone)]
-struct CallTransferConsultation {}
+pub struct CallTransferConsultation {
+    resource_id1: u32,
+    resource_id2: u32,
+}
+
 #[pyclass]
 #[derive(Clone)]
-struct CallTransferBlind {}
+pub struct CallTransferBlind {
+    resource_id: u32,
+    address: String,
+    use_h450: Option<u8>, // Default: 1
+}
 #[pyclass]
 #[derive(Clone)]
-struct CallHold {}
+pub struct CallHold {
+    resource_id: u32,
+}
 #[pyclass]
 #[derive(Clone)]
-struct CallRetrieve {}
+pub struct CallRetrieve {
+    resource_id: u32,
+}
 #[pyclass]
 #[derive(Clone)]
-struct CallSendDTMF {}
+pub struct CallSendDTMF {
+    resource_id: u32,
+    dtmf_string: String,
+    duration: Option<u32>,       // Default: 300 ms
+    delay: Option<u32>,          // Default: 200 ms
+    pause_duration: Option<u32>, // Default: 2000 ms
+}
 #[pyclass]
 #[derive(Clone)]
-struct CallStopActivity {}
+pub struct CallStopActivity {
+    resource_id: u32,
+}
 #[pyclass]
 #[derive(Clone)]
-struct CallT38Relay {}
+pub struct CallT38Relay {
+    resource_id1: u32,
+    resource_id2: u32,
+}
 #[pyclass]
 #[derive(Clone)]
-struct CallsSetAlertingType {}
+pub struct CallsSetAlertingType {
+    resource_id: u32,
+    alerting_type: String,
+}
 #[pyclass]
 #[derive(Clone)]
-struct CallsSetAccepting {}
+pub struct CallsSetAccepting {
+    resource_id: u32,
+    accepting: bool,
+}
 
 // Player Resource Commands
 #[pyclass]
@@ -396,6 +437,114 @@ impl Command {
     pub fn resource_get_status(resource_id: u32) -> Self {
         Command::ResourceGetStatus(ResourceGetStatus { resource_id })
     }
+
+    // Front-end Resource Commands
+    #[staticmethod]
+    pub fn call_make(
+        resource_id: u32,
+        address: String,
+        timeout: Option<u32>,
+        caller_number: Option<String>,
+        caller_name: Option<String>,
+        privacy: Option<u8>,
+        screen: Option<u8>,
+    ) -> Self {
+        Command::CallMake(CallMake {
+            resource_id,
+            address,
+            timeout: timeout.or(Some(30000)),
+            caller_number,
+            caller_name,
+            privacy: privacy.or(Some(0)),
+            screen: screen.or(Some(1)),
+        })
+    }
+
+    #[staticmethod]
+    pub fn call_answer(resource_id: u32) -> Self {
+        Command::CallAnswer(CallAnswer { resource_id })
+    }
+
+    #[staticmethod]
+    pub fn call_clear(resource_id: u32, reason: Option<String>) -> Self {
+        Command::CallClear(CallClear {
+            resource_id,
+            reason,
+        })
+    }
+
+    #[staticmethod]
+    pub fn call_transfer_consultation(resource_id1: u32, resource_id2: u32) -> Self {
+        Command::CallTransferConsultation(CallTransferConsultation {
+            resource_id1,
+            resource_id2,
+        })
+    }
+
+    #[staticmethod]
+    pub fn call_transfer_blind(resource_id: u32, address: String, use_h450: Option<u8>) -> Self {
+        Command::CallTransferBlind(CallTransferBlind {
+            resource_id,
+            address,
+            use_h450: use_h450.or(Some(1)),
+        })
+    }
+
+    #[staticmethod]
+    pub fn call_hold(resource_id: u32) -> Self {
+        Command::CallHold(CallHold { resource_id })
+    }
+
+    #[staticmethod]
+    pub fn call_retrieve(resource_id: u32) -> Self {
+        Command::CallRetrieve(CallRetrieve { resource_id })
+    }
+
+    #[staticmethod]
+    pub fn call_send_dtmf(
+        resource_id: u32,
+        dtmf_string: String,
+        duration: Option<u32>,
+        delay: Option<u32>,
+        pause_duration: Option<u32>,
+    ) -> Self {
+        Command::CallSendDTMF(CallSendDTMF {
+            resource_id,
+            dtmf_string,
+            duration: duration.or(Some(300)),
+            delay: delay.or(Some(200)),
+            pause_duration: pause_duration.or(Some(2000)),
+        })
+    }
+
+    #[staticmethod]
+    pub fn call_stop_activity(resource_id: u32) -> Self {
+        Command::CallStopActivity(CallStopActivity { resource_id })
+    }
+
+    #[staticmethod]
+    pub fn call_t38_relay(resource_id1: u32, resource_id2: u32) -> Self {
+        Command::CallT38Relay(CallT38Relay {
+            resource_id1,
+            resource_id2,
+        })
+    }
+
+    #[staticmethod]
+    pub fn calls_set_alerting_type(resource_id: u32, alerting_type: String) -> Self {
+        Command::CallsSetAlertingType(CallsSetAlertingType {
+            resource_id,
+            alerting_type,
+        })
+    }
+
+    #[staticmethod]
+    pub fn calls_set_accepting(resource_id: u32, accepting: bool) -> Self {
+        Command::CallsSetAccepting(CallsSetAccepting {
+            resource_id,
+            accepting,
+        })
+    }
 }
 
 impl fmt::Display for Command {
@@ -475,6 +624,82 @@ impl fmt::Display for Command {
             Command::ResourceDelete(cmd) => write!(f, "ResourceDelete {}", cmd.resource_id),
             Command::ResourceGetStatus(cmd) => write!(f, "ResourceGetStatus {}", cmd.resource_id),
 
+            // Front-end Resource Commands
+            Command::CallMake(cmd) => {
+                write!(f, "CallMake {} {}", cmd.resource_id, cmd.address)?;
+                if let Some(timeout) = cmd.timeout {
+                    write!(f, " TimeOut={}", timeout)?;
+                }
+                if let Some(ref num) = cmd.caller_number {
+                    write!(f, " CallerNumber={}", num)?;
+                }
+                if let Some(ref name) = cmd.caller_name {
+                    write!(f, " CallerName={}", name)?;
+                }
+                if let Some(privacy) = cmd.privacy {
+                    write!(f, " Privacy={}", privacy)?;
+                }
+                if let Some(screen) = cmd.screen {
+                    write!(f, " Screen={}", screen)?;
+                }
+                Ok(())
+            }
+            Command::CallAnswer(cmd) => write!(f, "CallAnswer {}", cmd.resource_id),
+            Command::CallClear(cmd) => {
+                write!(f, "CallClear {}", cmd.resource_id)?;
+                if let Some(ref reason) = cmd.reason {
+                    write!(f, " Reason={}", reason)?;
+                }
+                Ok(())
+            }
+            Command::CallTransferConsultation(cmd) => {
+                write!(
+                    f,
+                    "CallTransferConsultation {} {}",
+                    cmd.resource_id1, cmd.resource_id2
+                )
+            }
+            Command::CallTransferBlind(cmd) => {
+                write!(f, "CallTransferBlind {} {}", cmd.resource_id, cmd.address)?;
+                if let Some(use_h450) = cmd.use_h450 {
+                    write!(f, " UseH450={}", use_h450)?;
+                }
+                Ok(())
+            }
+            Command::CallHold(cmd) => write!(f, "CallHold {}", cmd.resource_id),
+            Command::CallRetrieve(cmd) => write!(f, "CallRetrieve {}", cmd.resource_id),
+            Command::CallSendDTMF(cmd) => {
+                write!(f, "CallSendDTMF {} {}", cmd.resource_id, cmd.dtmf_string)?;
+                if let Some(duration) = cmd.duration {
+                    write!(f, " Duration={}", duration)?;
+                }
+                if let Some(delay) = cmd.delay {
+                    write!(f, " Delay={}", delay)?;
+                }
+                if let Some(pause) = cmd.pause_duration {
+                    write!(f, " PauseDuration={}", pause)?;
+                }
+                Ok(())
+            }
+            Command::CallStopActivity(cmd) => write!(f, "CallStopActivity {}", cmd.resource_id),
+            Command::CallT38Relay(cmd) => {
+                write!(f, "CallT38Relay {} {}", cmd.resource_id1, cmd.resource_id2)
+            }
+            Command::CallsSetAlertingType(cmd) => {
+                write!(
+                    f,
+                    "CallsSetAlertingType {} {}",
+                    cmd.resource_id, cmd.alerting_type
+                )
+            }
+            Command::CallsSetAccepting(cmd) => {
+                write!(
+                    f,
+                    "CallsSetAccepting {} {}",
+                    cmd.resource_id,
+                    if cmd.accepting { 1 } else { 0 }
+                )
+            }
             _ => write!(f, "Unimplemented Command"),
         }
     }
@@ -522,5 +747,39 @@ pub trait CommandHandler: Send + Sync {
 
     fn resource_delete(&mut self, resource_id: u32) -> PyResult<()>;
     fn resource_get_status(&mut self, resource_id: u32) -> PyResult<()>;
-}
 
+    // Front-end Resource Commands
+    fn call_make(
+        &mut self,
+        resource_id: u32,
+        address: String,
+        timeout: Option<u32>,
+        caller_number: Option<String>,
+        caller_name: Option<String>,
+        privacy: Option<u8>,
+        screen: Option<u8>,
+    ) -> PyResult<()>;
+    fn call_answer(&mut self, resource_id: u32) -> PyResult<()>;
+    fn call_clear(&mut self, resource_id: u32, reason: Option<String>) -> PyResult<()>;
+    fn call_transfer_consultation(&mut self, resource_id1: u32, resource_id2: u32) -> PyResult<()>;
+    fn call_transfer_blind(
+        &mut self,
+        resource_id: u32,
+        address: String,
+        use_h450: Option<u8>,
+    ) -> PyResult<()>;
+    fn call_hold(&mut self, resource_id: u32) -> PyResult<()>;
+    fn call_retrieve(&mut self, resource_id: u32) -> PyResult<()>;
+    fn call_send_dtmf(
+        &mut self,
+        resource_id: u32,
+        dtmf_string: String,
+        duration: Option<u32>,
+        delay: Option<u32>,
+        pause_duration: Option<u32>,
+    ) -> PyResult<()>;
+    fn call_stop_activity(&mut self, resource_id: u32) -> PyResult<()>;
+    fn call_t38_relay(&mut self, resource_id1: u32, resource_id2: u32) -> PyResult<()>;
+    fn calls_set_alerting_type(&mut self, resource_id: u32, alerting_type: String) -> PyResult<()>;
+    fn calls_set_accepting(&mut self, resource_id: u32, accepting: bool) -> PyResult<()>;
+}
