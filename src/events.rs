@@ -1577,4 +1577,12 @@ mod tests {
             _ => panic!("wrong variant"),
         }
     }
+
+    // Misc. tests
+    #[test]
+    fn parse_unknown_event() {
+        let line = "EUnknownEvent 1 2";
+        let result = serde_plain::from_str::<Event>(line);
+        assert!(result.is_err());
+    }
 }
