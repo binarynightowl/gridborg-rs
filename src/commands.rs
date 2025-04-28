@@ -1013,10 +1013,7 @@ impl Command {
     }
 
     #[staticmethod]
-    pub fn audio_cancel(
-        source_resource_id: ResourceId,
-        sink_resource_id: ResourceId,
-    ) -> Self {
+    pub fn audio_cancel(source_resource_id: ResourceId, sink_resource_id: ResourceId) -> Self {
         Command::AudioCancel(AudioCancel {
             source_resource_id,
             sink_resource_id,
@@ -1218,7 +1215,7 @@ impl fmt::Display for Command {
                     cmd.resource_id,
                     if cmd.accepting { 1 } else { 0 }
                 )
-            },
+            }
 
             // Player Resource Commands
             Command::PlayFile(cmd) => {
@@ -1239,9 +1236,13 @@ impl fmt::Display for Command {
                     write!(f, " SkipBytes={}", skip_bytes)?;
                 }
                 Ok(())
-            },
+            }
             Command::PlayStream(cmd) => {
-                write!(f, "PlayStream {} {}", cmd.player_id, cmd.transport_channel_id)?;
+                write!(
+                    f,
+                    "PlayStream {} {}",
+                    cmd.player_id, cmd.transport_channel_id
+                )?;
                 if let Some(audio_type) = &cmd.audio_type {
                     write!(f, " Type={}", audio_type.name)?;
                 }
@@ -1252,7 +1253,7 @@ impl fmt::Display for Command {
                     write!(f, " BufferOptimumSize={}", buffer)?;
                 }
                 Ok(())
-            },
+            }
             Command::PlayTone(cmd) => {
                 write!(f, "PlayTone {}", cmd.resource_id)?;
                 if let Some(frequency) = cmd.frequency {
@@ -1271,14 +1272,18 @@ impl fmt::Display for Command {
                     write!(f, " Duration={}", duration)?;
                 }
                 Ok(())
-            },
+            }
             Command::PlayStop(cmd) => {
                 write!(f, "PlayStop {}", cmd.resource_id)
-            },
+            }
 
             // Recorder Resource Commands
             Command::RecorderStartToFile(cmd) => {
-                write!(f, "RecorderStartToFile {} {}", cmd.resource_id, cmd.file_name)?;
+                write!(
+                    f,
+                    "RecorderStartToFile {} {}",
+                    cmd.resource_id, cmd.file_name
+                )?;
                 if let Some(audio_type) = &cmd.audio_type {
                     write!(f, " Type={}", audio_type.name)?;
                 }
@@ -1304,9 +1309,13 @@ impl fmt::Display for Command {
                     write!(f, " PauseIfEmpty={}", if pause_if_empty { 1 } else { 0 })?;
                 }
                 Ok(())
-            },
+            }
             Command::RecorderStartToStream(cmd) => {
-                write!(f, "RecorderStartToStream {} {}", cmd.recorder_id, cmd.transport_channel_id)?;
+                write!(
+                    f,
+                    "RecorderStartToStream {} {}",
+                    cmd.recorder_id, cmd.transport_channel_id
+                )?;
                 if let Some(audio_type) = &cmd.audio_type {
                     write!(f, " Type={}", audio_type.name)?;
                 }
@@ -1326,10 +1335,10 @@ impl fmt::Display for Command {
                     write!(f, " PauseIfEmpty={}", if pause_if_empty { 1 } else { 0 })?;
                 }
                 Ok(())
-            },
+            }
             Command::RecorderStop(cmd) => {
                 write!(f, "RecorderStop {}", cmd.resource_id)
-            },
+            }
 
             // RTP Channel Resource Commands
             Command::RtpChannelStartReceiving(cmd) => {
@@ -1359,9 +1368,13 @@ impl fmt::Display for Command {
                     write!(f, " JitterBufferLengthMax={}", jb_max)?;
                 }
                 Ok(())
-            },
+            }
             Command::RtpChannelStartSending(cmd) => {
-                write!(f, "RtpChannelStartSending {} {}", cmd.resource_id, cmd.receiver_data_address)?;
+                write!(
+                    f,
+                    "RtpChannelStartSending {} {}",
+                    cmd.resource_id, cmd.receiver_data_address
+                )?;
                 if let Some(addr) = &cmd.receiver_control_address {
                     write!(f, " ReceiverControlAddress={}", addr)?;
                 }
@@ -1381,12 +1394,16 @@ impl fmt::Display for Command {
                     write!(f, " RtpSessionId={}", rtp_session_id)?;
                 }
                 Ok(())
-            },
+            }
             Command::RtpChannelStop(cmd) => {
                 write!(f, "RtpChannelStop {}", cmd.resource_id)
-            },
+            }
             Command::RtpChannelSendDTMF(cmd) => {
-                write!(f, "RtpChannelSendDTMF {} {}", cmd.resource_id, cmd.dtmf_string)?;
+                write!(
+                    f,
+                    "RtpChannelSendDTMF {} {}",
+                    cmd.resource_id, cmd.dtmf_string
+                )?;
                 if let Some(duration) = cmd.duration {
                     write!(f, " Duration={}", duration)?;
                 }
@@ -1397,19 +1414,23 @@ impl fmt::Display for Command {
                     write!(f, " PauseDuration={}", pause)?;
                 }
                 Ok(())
-            },
+            }
 
             // Sound device Resource Commands
             Command::SoundDeviceStart(cmd) => {
                 write!(f, "SoundDeviceStart {}", cmd.resource_id)
-            },
+            }
             Command::SoundDeviceStop(cmd) => {
                 write!(f, "SoundDeviceStop {}", cmd.resource_id)
-            },
+            }
 
             // Fax Resource Commands
             Command::FaxReceive(cmd) => {
-                write!(f, "FaxReceive {} {} {}", cmd.fax_resource_id, cmd.frontend_resource_id, cmd.document_resource_id)?;
+                write!(
+                    f,
+                    "FaxReceive {} {} {}",
+                    cmd.fax_resource_id, cmd.frontend_resource_id, cmd.document_resource_id
+                )?;
                 if let Some(fax_mode) = &cmd.fax_mode {
                     write!(f, " FaxMode={}", fax_mode.name)?;
                 }
@@ -1420,9 +1441,13 @@ impl fmt::Display for Command {
                     write!(f, " CSI={}", csi)?;
                 }
                 Ok(())
-            },
+            }
             Command::FaxSend(cmd) => {
-                write!(f, "FaxSend {} {} {}", cmd.fax_resource_id, cmd.frontend_resource_id, cmd.document_resource_id)?;
+                write!(
+                    f,
+                    "FaxSend {} {} {}",
+                    cmd.fax_resource_id, cmd.frontend_resource_id, cmd.document_resource_id
+                )?;
                 if let Some(speed) = &cmd.speed {
                     write!(f, " Speed={}", speed.name)?;
                 }
@@ -1436,10 +1461,10 @@ impl fmt::Display for Command {
                     write!(f, " TSI={}", tsi)?;
                 }
                 Ok(())
-            },
+            }
             Command::FaxAbort(cmd) => {
                 write!(f, "FaxAbort {}", cmd.resource_id)
-            },
+            }
 
             // Document Resource Commands
             Command::DocumentAddFile(cmd) => {
@@ -1448,7 +1473,7 @@ impl fmt::Display for Command {
                     write!(f, " Transformation={}", transformation.name)?;
                 }
                 Ok(())
-            },
+            }
             Command::DocumentPrepare(cmd) => {
                 write!(f, "DocumentPrepare {}", cmd.resource_id)?;
                 if let Some(paper_size) = &cmd.paper_size {
@@ -1458,7 +1483,7 @@ impl fmt::Display for Command {
                     write!(f, " Resolution={}", resolution.name)?;
                 }
                 Ok(())
-            },
+            }
             Command::DocumentSave(cmd) => {
                 write!(f, "DocumentSave {} {}", cmd.resource_id, cmd.file_path)?;
                 if let Some(multipage) = cmd.multipage {
@@ -1468,14 +1493,18 @@ impl fmt::Display for Command {
                     write!(f, " DocumentType={}", doc_type.name)?;
                 }
                 Ok(())
-            },
+            }
             Command::DocumentClear(cmd) => {
                 write!(f, "DocumentClear {}", cmd.resource_id)
-            },
+            }
 
             // Audio Routing and Audio Stream Monitoring Commands
             Command::AudioSend(cmd) => {
-                write!(f, "AudioSend {} {}", cmd.source_resource_id, cmd.sink_resource_id)?;
+                write!(
+                    f,
+                    "AudioSend {} {}",
+                    cmd.source_resource_id, cmd.sink_resource_id
+                )?;
                 if let Some(source_channel) = cmd.source_channel {
                     write!(f, " SourceChannel={}", source_channel)?;
                 }
@@ -1501,10 +1530,14 @@ impl fmt::Display for Command {
                     write!(f, " AutoGainKillTime={}", kill)?;
                 }
                 Ok(())
-            },
+            }
             Command::AudioCancel(cmd) => {
-                write!(f, "AudioCancel {} {}", cmd.source_resource_id, cmd.sink_resource_id)
-            },
+                write!(
+                    f,
+                    "AudioCancel {} {}",
+                    cmd.source_resource_id, cmd.sink_resource_id
+                )
+            }
             Command::AudioLevelNotificationSend(cmd) => {
                 write!(f, "AudioLevelNotificationSend {}", cmd.resource_id)?;
                 if let Some(resolution) = cmd.resolution {
@@ -1526,24 +1559,24 @@ impl fmt::Display for Command {
                     write!(f, " SilenceTimer={}", silence_timer)?;
                 }
                 Ok(())
-            },
+            }
             Command::AudioLevelNotificationCancel(cmd) => {
                 write!(f, "AudioLevelNotificationCancel {}", cmd.resource_id)
-            },
+            }
             Command::InBandSignalingDetectionEnable(cmd) => {
                 write!(f, "InBandSignalingDetectionEnable {}", cmd.resource_id)
-            },
+            }
             Command::InBandSignalingDetectionDisable(cmd) => {
                 write!(f, "InBandSignalingDetectionDisable {}", cmd.resource_id)
-            },
+            }
 
             // Miscellaneous Commands
             Command::GetRtpStatistics(cmd) => {
                 write!(f, "GetRtpStatistics {}", cmd.resource_id)
-            },
+            }
 
-            // This will most likely cause the gridborg to have an error...
-            _ => write!(f, "Unimplemented Command"),
+            // // This will most likely cause the gridborg to have an error...
+            // _ => write!(f, "Unimplemented Command"),
         }
     }
 }
@@ -1631,11 +1664,173 @@ pub trait CommandHandler: Send + Sync {
     fn calls_set_accepting(&mut self, resource_id: ResourceId, accepting: bool) -> PyResult<()>;
 
     // Player Resource Commands
+    fn play_file(
+        &mut self,
+        resource_id: ResourceId,
+        file_name: String,
+        audio_type: Option<AudioFormatType>,
+        sample_rate: Option<SampleRate>,
+        channels: Option<Channels>,
+        index: Option<u32>,
+        skip_bytes: Option<i64>,
+    ) -> PyResult<()>;
+    fn play_stream(
+        &mut self,
+        player_id: ResourceId,
+        transport_channel_id: ResourceId,
+        audio_type: Option<AudioFormatType>,
+        sample_rate: Option<SampleRate>,
+        buffer_optimum_size: Option<u32>,
+    ) -> PyResult<()>;
+    fn play_tone(
+        &mut self,
+        resource_id: ResourceId,
+        frequency: Option<u16>,
+        frequency2: Option<u16>,
+        tone: Option<ToneType>,
+        volume: Option<u8>,
+        duration: Option<u16>,
+    ) -> PyResult<()>;
+    fn play_stop(&mut self, resource_id: ResourceId) -> PyResult<()>;
+
     // Recorder Resource Commands
+    fn recorder_start_to_file(
+        &mut self,
+        resource_id: ResourceId,
+        file_name: String,
+        audio_type: Option<AudioFormatType>,
+        sample_rate: Option<SampleRate>,
+        channels: Option<Channels>,
+        file_offset: Option<i64>,
+        max_duration: Option<u32>,
+        max_silence: Option<u32>,
+        voice_trigger: Option<bool>,
+        pause_if_empty: Option<bool>,
+    ) -> PyResult<()>;
+    fn recorder_start_to_stream(
+        &mut self,
+        recorder_id: ResourceId,
+        transport_channel_id: ResourceId,
+        audio_type: Option<AudioFormatType>,
+        sample_rate: Option<SampleRate>,
+        max_duration: Option<u32>,
+        max_silence: Option<u32>,
+        voice_trigger: Option<bool>,
+        pause_if_empty: Option<bool>,
+    ) -> PyResult<()>;
+    fn recorder_stop(&mut self, resource_id: ResourceId) -> PyResult<()>;
+
     // RTP Channel Resource Commands
+    fn rtp_channel_start_receiving(
+        &mut self,
+        resource_id: ResourceId,
+        sender_control_address: Option<String>,
+        receiver_data_address: Option<String>,
+        receiver_control_address: Option<String>,
+        payload_type: Option<PayloadType>,
+        rfc2833_payload_type: Option<u8>,
+        rtp_session_id: Option<u8>,
+        jitter_buffer_length_min: Option<u16>,
+        jitter_buffer_length_max: Option<u16>,
+    ) -> PyResult<()>;
+    fn rtp_channel_start_sending(
+        &mut self,
+        resource_id: ResourceId,
+        receiver_data_address: String,
+        receiver_control_address: Option<String>,
+        sender_data_address: Option<String>,
+        sender_control_address: Option<String>,
+        payload_type: Option<PayloadType>,
+        rfc2833_payload_type: Option<u8>,
+        rtp_session_id: Option<u8>,
+    ) -> PyResult<()>;
+    fn rtp_channel_stop(&mut self, resource_id: ResourceId) -> PyResult<()>;
+    fn rtp_channel_send_dtmf(
+        &mut self,
+        resource_id: ResourceId,
+        dtmf_string: String,
+        duration: Option<u32>,
+        delay: Option<u32>,
+        pause_duration: Option<u32>,
+    ) -> PyResult<()>;
+
     // Sound device Resource Commands
+    fn sound_device_start(&mut self, resource_id: ResourceId) -> PyResult<()>;
+    fn sound_device_stop(&mut self, resource_id: ResourceId) -> PyResult<()>;
+
     // Fax Resource Commands
+    fn fax_receive(
+        &mut self,
+        fax_resource_id: ResourceId,
+        frontend_resource_id: ResourceId,
+        document_resource_id: ResourceId,
+        fax_mode: Option<FaxReceiveMode>,
+        use_ecm: Option<ECM>,
+        csi: Option<String>,
+    ) -> PyResult<()>;
+    fn fax_send(
+        &mut self,
+        fax_resource_id: ResourceId,
+        frontend_resource_id: ResourceId,
+        document_resource_id: ResourceId,
+        speed: Option<FaxSendSpeed>,
+        use_ecm: Option<ECM>,
+        header: Option<String>,
+        tsi: Option<String>,
+    ) -> PyResult<()>;
+    fn fax_abort(&mut self, resource_id: ResourceId) -> PyResult<()>;
+
     // Document Resource Commands
+    fn document_add_file(
+        &mut self,
+        resource_id: ResourceId,
+        file_path: String,
+        transformation: Option<DocumentAddFileTransformation>,
+    ) -> PyResult<()>;
+    fn document_prepare(
+        &mut self,
+        resource_id: ResourceId,
+        paper_size: Option<DocumentPreparePaperSize>,
+        resolution: Option<DocumentPrepareResolution>,
+    ) -> PyResult<()>;
+    fn document_save(
+        &mut self,
+        resource_id: ResourceId,
+        file_path: String,
+        multipage: Option<bool>,
+        document_type: Option<DocumentSaveType>,
+    ) -> PyResult<()>;
+    fn document_clear(&mut self, resource_id: ResourceId) -> PyResult<()>;
+
     // Audio Routing and Audio Stream Monitoring Commands
+    fn audio_send(
+        &mut self,
+        source_resource_id: ResourceId,
+        sink_resource_id: ResourceId,
+        source_channel: Option<u8>,
+        sink_channel: Option<u8>,
+        volume: Option<i16>,
+        auto_gain: Option<bool>,
+        auto_gain_resolution: Option<u16>,
+        auto_gain_rise_time: Option<u16>,
+        auto_gain_fall_time: Option<u16>,
+        auto_gain_kill_time: Option<u16>,
+    ) -> PyResult<()>;
+    fn audio_cancel(&mut self, source_resource_id: ResourceId, sink_resource_id: ResourceId) -> PyResult<()>;
+    fn audio_level_notification_send(
+        &mut self,
+        resource_id: ResourceId,
+        resolution: Option<u16>,
+        voice_dead_band: Option<u16>,
+        silence_dead_band: Option<u16>,
+        adaptive_period: Option<u16>,
+        voice_timer: Option<u16>,
+        silence_timer: Option<u16>,
+    ) -> PyResult<()>;
+    fn audio_level_notification_cancel(&mut self, resource_id: ResourceId) -> PyResult<()>;
+    fn in_band_signaling_detection_enable(&mut self, resource_id: ResourceId) -> PyResult<()>;
+    fn in_band_signaling_detection_disable(&mut self, resource_id: ResourceId) -> PyResult<()>;
+    
     // Miscellaneous Commands
+    fn get_rtp_statistics(&mut self, resource_id: ResourceId) -> PyResult<()>;
 }
