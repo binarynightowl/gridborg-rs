@@ -7,7 +7,7 @@ use std::thread;
 use crate::commands::{Command, CommandHandler};
 
 pub fn init(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
-    let child_module = PyModule::new_bound(parent_module.py(), "client")?;
+    let child_module = PyModule::new(parent_module.py(), "client")?;
 
     child_module.add_class::<GridborgClient>()?;
 

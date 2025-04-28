@@ -1,3 +1,4 @@
+use std::str::FromStr;
 use crate::primitives::{Channels, SampleRate};
 use crate::{audio_formats, constant_set, payload_types, play_tones};
 use paste::paste;
@@ -298,6 +299,32 @@ play_tones! {
     (RecorderConnectedTone, "Connected to answering machine—leave a message", 440, 0 , 500  , 4500  ),
     (CallWaitingTone     , "New incoming call (-13db)"                 , 440 , 0    , 300  , 9700  ),
     (ReorderTone         , "Reorder tone"                              , 480 , 620  , 300  , 200   ),
+}
+
+const CONSTANT_TABLES: &[&[ConstantWithDescription]] = &[
+    ALL_ESTREAM_BUFFER_STATE_NOTIFICATIONS,
+    ALL_RECORDER_STOP_REASONS,
+    ALL_FAX_SEND_SPEEDS,
+    ALL_FAX_RECEIVE_MODES,
+    ALL_DOCUMENT_PREPARE_PAPER_SIZES,
+    ALL_DOCUMENT_PREPARE_RESOLUTIONS,
+    ALL_DOCUMENT_ADD_FILE_TRANSFORMATIONS,
+    ALL_DOCUMENT_SAVE_TYPES,
+    ALL_CALL_END_REASONS,
+    ALL_ALERTING_TYPES,
+];
+
+impl FromStr for ConstantWithDescription {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        for table in CONSTANT_TABLES {
+            if let Some(c) = table.iter().find(|c| c.name.eq_ignore_ascii_case(s)) {
+                return Ok(*c);
+            }
+        }
+        Err(())
+    }
 }
 
 #[cfg(test)]

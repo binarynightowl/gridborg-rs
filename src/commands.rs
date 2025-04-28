@@ -5,7 +5,7 @@ use pyo3::{pyclass, pymethods, Bound, PyResult};
 use std::fmt;
 
 pub fn init(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
-    let child_module = PyModule::new_bound(parent_module.py(), "commands")?;
+    let child_module = PyModule::new(parent_module.py(), "commands")?;
 
     child_module.add_class::<Command>()?;
 
