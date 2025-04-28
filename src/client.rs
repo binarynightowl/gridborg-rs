@@ -17,15 +17,15 @@ pub fn init(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
 
     child_module.add_class::<GridborgClient>()?;
 
-    // child_module.add_function(wrap_pyfunction!(sum_as_string, &child_module)?)?;
+    child_module.add_function(wrap_pyfunction!(sum_as_string, &child_module)?)?;
 
     parent_module.add_submodule(&child_module)
 }
 
-// #[pyfunction]
-// fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
-//     Ok((a + b).to_string())
-// }
+#[pyfunction]
+fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
+    Ok((a + b).to_string())
+}
 
 #[pyclass]
 struct GridborgClient {
