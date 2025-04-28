@@ -1,6 +1,9 @@
 use crate::{audio_formats, constant_set, payload_types};
 use paste::paste;
+use pyo3::pyclass;
 
+#[pyclass]
+#[derive(Clone)]
 enum ResourceType {
     FrontEnd,
     Player,
@@ -12,12 +15,14 @@ enum ResourceType {
     Document,
 }
 
+#[pyclass]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct AudioFormatType {
     pub name: &'static str,
     pub channels: u8,
 }
 
+#[pyclass]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct PayloadType {
     pub name: &'static str,
@@ -25,6 +30,7 @@ pub struct PayloadType {
     pub sample_rate: u16,
 }
 
+#[pyclass]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct ConstantWithDescription {
     pub name: &'static str,
