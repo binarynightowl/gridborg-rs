@@ -1,4 +1,4 @@
-use crate::{constant_set, payload_types};
+use crate::{audio_formats, constant_set, payload_types};
 use paste::paste;
 
 enum ResourceType {
@@ -13,6 +13,12 @@ enum ResourceType {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct AudioFormatType {
+    pub name: &'static str,
+    pub channels: u8,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct PayloadType {
     pub name: &'static str,
     pub type_code: Option<u8>,
@@ -23,6 +29,45 @@ pub struct PayloadType {
 pub struct ConstantWithDescription {
     pub name: &'static str,
     pub description: &'static str,
+}
+
+audio_formats! {
+    //  codec          wav raw vap  channels
+    (ALAW        ,   Y , Y , Y , 2),
+    (MULAW       ,   Y , Y , Y , 2),
+    (PCM16       ,   Y , Y , N , 2),
+    (PCM8        ,   Y , Y , N , 2),
+    (PCM_S8      ,   N , Y , N , 1),
+    (Linear_16_Mono_16kHz , N , Y , N , 1),
+    (G726_40K    ,   N , Y , N , 1),
+    (G726_32K    ,   N , Y , N , 1),
+    (G726_24K    ,   N , Y , N , 1),
+    (G726_16K    ,   N , Y , N , 1),
+    (GSM610      ,   Y , Y , N , 1),
+    (MS_GSM      ,   Y , Y , N , 1),
+    (ILBC_13K3   ,   N , Y , N , 1),
+    (ILBC_15K2   ,   N , Y , N , 1),
+    (LPC10       ,   N , Y , N , 1),
+    (SpeexNB_5_95K , N , Y , N , 1),
+    (SpeexNB_8K  ,   N , Y , N , 1),
+    (SpeexNB_11K ,   N , Y , N , 1),
+    (SpeexNB_15K ,   N , Y , N , 1),
+    (SpeexNB_18_2K , N , Y , N , 1),
+    (SpeexNB_24_6K , N , Y , N , 1),
+    (SpeexWB_20_6K , N , Y , N , 1),
+    (SpeexWNarrow_8K , N , Y , N , 1),
+    (IMA_ADPCM   ,   Y , Y , N , 2),
+    (MSADPCM4    ,   Y , Y , N , 2),
+    (ADPCM4      ,   Y , Y , Y , 2),
+    (G728        ,   N , Y , N , 1),
+    (G729        ,   N , Y , N , 1),
+    (G729A       ,   N , Y , N , 1),
+    (G729B       ,   N , Y , N , 1),
+    (G729AB      ,   N , Y , N , 1),
+    (G7231       ,   N , Y , N , 1),
+    (G7231_5_3K  ,   N , Y , N , 1),
+    (G7231A_6_3K ,   N , Y , N , 1),
+    (G7231A_5_3K ,   N , Y , N , 1),
 }
 
 payload_types! {

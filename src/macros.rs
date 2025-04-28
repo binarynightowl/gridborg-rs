@@ -1,3 +1,27 @@
+#[macro_export]
+macro_rules! audio_formats {
+    ( $( ($codec:ident , $wav:tt , $raw:tt , $vap:tt , $ch:expr) ),* $(,)? ) => {
+        $(
+            audio_formats!(@maybe_const WAV   $wav  $codec $ch);
+            audio_formats!(@maybe_const RAW   $raw  $codec $ch);
+            audio_formats!(@maybe_const VAP   $vap  $codec $ch);
+        )*
+    };
+
+    // ── helper ── emit constant only if flag == Y
+    (@maybe_const $prefix:ident Y $codec:ident $ch:expr) => {
+        paste::paste! {
+            #[allow(non_upper_case_globals)]
+            pub const [<$prefix _ $codec>]: $crate::constants::AudioFormatType =
+                $crate::constants::AudioFormatType {
+                    name: concat!(stringify!($prefix), "_", stringify!($codec)),
+                    channels: $ch,
+                };
+        }
+    };
+    (@maybe_const $prefix:ident N $codec:ident $ch:expr) => {};   // nothing
+}
+
 /// Declare payload-type constants.
 ///
 /// * `$ident` – legal Rust identifier that will become the constant suffix.
