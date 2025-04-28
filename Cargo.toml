@@ -9,4 +9,5 @@ name = "gridborg_rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = { version = "0.23.4", features = ["extension-module"] }
+pyo3 = { version = "0.24.2", features = ["extension-module"] }
+paste = {version = "1.0.15"}

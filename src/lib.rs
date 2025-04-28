@@ -1,6 +1,8 @@
 mod client;
 mod commands;
 mod primitives;
+mod constants;
+mod macros;
 
 use pyo3::prelude::*;
 

@@ -1,0 +1,56 @@
+/// Declare payload-type constants.
+///
+/// * `$ident` – legal Rust identifier that will become the constant suffix.
+/// * `$label` – the human-readable codec name (string literal).
+/// * `$code`  – RTP payload-type code, or `_` if none.
+/// * `$rate`  – sample-rate in Hertz.
+///
+/// The macro turns `(G711_ALAW_64K, "G.711-ALaw-64k", 0, 8000)` into
+/// `pub const PT_G711_ALAW_64K: PayloadType = …`, and collects every
+/// constant into `ALL_PAYLOAD_TYPES`.
+#[macro_export]
+macro_rules! payload_types {
+    ( $( ($ident:ident , $label:literal , $code:tt , $rate:expr) ),* $(,)? ) => {
+        paste! {
+            $(
+                pub const [<PayloadType_ $ident>]: $crate::constants::PayloadType = $crate::constants::PayloadType {
+                    name: $label,
+                    type_code: payload_types!(@code $code),
+                    sample_rate: $rate,
+                };
+            )*
+
+            pub const ALL_PAYLOAD_TYPES: &[$crate::constants::PayloadType] = &[
+                $([<PayloadType_ $ident>]),*
+            ];
+        }
+    };
+
+    // helpers ────────────────────────────────────────
+    (@code _)          => { None };
+    (@code $n:literal) => { Some($n) };
+}
+
+#[macro_export]
+macro_rules! constant_set {
+    (
+        type   = $ty:ident ,
+        prefix = $prefix:ident ,
+        slice  = $slice:ident ,
+        $( ($ident:ident , $desc:literal) ),* $(,)?
+    ) => {
+        paste::paste! {
+            $(
+                pub const [<$prefix _ $ident>]: $crate::constants::$ty =
+                    $crate::constants::$ty {
+                        name: stringify!($ident),
+                        description: $desc,
+                    };
+            )*
+
+            pub const $slice: &[$crate::constants::$ty] = &[
+                $([<$prefix _ $ident>]),*
+            ];
+        }
+    };
+}
