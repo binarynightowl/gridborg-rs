@@ -668,7 +668,11 @@ fn parse_event(line: &str) -> Result<Event, ParseEventError> {
             let receiver_data_address = tokens.get(3).ok_or(ParseEventError::WrongArity(name.into()))?.to_string();
             let opts = parse_opts(&tokens, 4);
             let receiver_control_address = opts.get("receivercontroladdress").cloned();
-            let rtp_payload_type = opts.get("rtppayloadtype").map(|v| v.parse().unwrap());
+            let rtp_payload_type = opts
+                .get("rtppayloadtype")
+                .and_then(|v| v.parse::<u8>().ok())
+                .and_then(PayloadType::from_code);
+
             Ok(Event::RtpChannelStartedReceiving(RtpChannelStartedReceiving {
                 session_id,
                 resource_id,
@@ -682,7 +686,10 @@ fn parse_event(line: &str) -> Result<Event, ParseEventError> {
             let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
             let opts = parse_opts(&tokens, 3);
             let sender_control_address = opts.get("sendercontroladdress").cloned();
-            let rtp_payload_type = opts.get("rtppayloadtype").map(|v| v.parse().unwrap());
+            let rtp_payload_type = opts
+                .get("rtppayloadtype")
+                .and_then(|v| v.parse::<u8>().ok())
+                .and_then(PayloadType::from_code);
             Ok(Event::RtpChannelStartedSending(RtpChannelStartedSending {
                 session_id,
                 resource_id,
@@ -884,6 +891,7 @@ fn parse_event(line: &str) -> Result<Event, ParseEventError> {
 
 #[cfg(test)]
 mod tests {
+    use crate::constants::FaxSendSpeed_V27At2400;
     use super::*;
 
     // Session, Resource and Notification Events
@@ -950,10 +958,623 @@ mod tests {
         }
     }
 
-    // Player Resource Events
-    // Recorder Resource Events
-    // RTP Channel Resource Events
-    // Sound Device Resource Events
-    // Fax Resource Events
-    // Document Resource Events
+    #[test]
+    fn parse_call_outgoing() {
+        let line = "ECallOutgoing 1 2 address123 callid123";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::CallOutgoing(co) => {
+                assert_eq!(co.session_id, 1);
+                assert_eq!(co.resource_id, 2);
+                assert_eq!(co.address, "address123");
+                assert_eq!(co.call_identifier, "callid123");
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_call_remote_alerting() {
+        let line = "ECallRemoteAlerting 1 2";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::CallRemoteAlerting(cra) => {
+                assert_eq!(cra.session_id, 1);
+                assert_eq!(cra.resource_id, 2);
+                assert_eq!(cra.user, None);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_call_remote_alerting_with_options() {
+        let line = "ECallRemoteAlerting 1 2 User=John";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::CallRemoteAlerting(cra) => {
+                assert_eq!(cra.session_id, 1);
+                assert_eq!(cra.resource_id, 2);
+                assert_eq!(cra.user.as_deref(), Some("John"));
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_call_connection_established() {
+        let line = "ECallConnectionEstablished 1 2";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::CallConnectionEstablished(cce) => {
+                assert_eq!(cce.session_id, 1);
+                assert_eq!(cce.resource_id, 2);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_call_connection_failed() {
+        let line = "ECallConnectionFailed 1 2 ReasonText";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::CallConnectionFailed(ccf) => {
+                assert_eq!(ccf.session_id, 1);
+                assert_eq!(ccf.resource_id, 2);
+                assert_eq!(ccf.reason, "ReasonText");
+                assert_eq!(ccf.protocol_specific_reason, None);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_call_connection_failed_with_options() {
+        let line = "ECallConnectionFailed 1 2 ReasonText ProtocolSpecificReason=SomeSpecific";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::CallConnectionFailed(ccf) => {
+                assert_eq!(ccf.session_id, 1);
+                assert_eq!(ccf.resource_id, 2);
+                assert_eq!(ccf.reason, "ReasonText");
+                assert_eq!(ccf.protocol_specific_reason.as_deref(), Some("SomeSpecific"));
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_call_cleared() {
+        let line = "ECallCleared 1 2 ReasonText";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::CallCleared(cc) => {
+                assert_eq!(cc.session_id, 1);
+                assert_eq!(cc.resource_id, 2);
+                assert_eq!(cc.reason, "ReasonText");
+                assert_eq!(cc.protocol_specific_reason, None);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_call_cleared_with_options() {
+        let line = "ECallCleared 1 2 ReasonText ProtocolSpecificReason=SomeSpecific";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::CallCleared(cc) => {
+                assert_eq!(cc.session_id, 1);
+                assert_eq!(cc.resource_id, 2);
+                assert_eq!(cc.reason, "ReasonText");
+                assert_eq!(cc.protocol_specific_reason.as_deref(), Some("SomeSpecific"));
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_call_send_dtmf_finished() {
+        let line = "ECallSendDTMFFinished 1 2";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::CallSendDTMFFinished(csdf) => {
+                assert_eq!(csdf.session_id, 1);
+                assert_eq!(csdf.resource_id, 2);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_call_key_press() {
+        let line = "ECallKeyPress 1 2 5";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::CallKeyPress(ckp) => {
+                assert_eq!(ckp.session_id, 1);
+                assert_eq!(ckp.resource_id, 2);
+                assert_eq!(ckp.key, "5");
+                assert_eq!(ckp.duration, None);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_call_key_press_with_options() {
+        let line = "ECallKeyPress 1 2 5 Duration=150";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::CallKeyPress(ckp) => {
+                assert_eq!(ckp.session_id, 1);
+                assert_eq!(ckp.resource_id, 2);
+                assert_eq!(ckp.key, "5");
+                assert_eq!(ckp.duration, Some(150));
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    // --- Player Resource Events ---
+
+    #[test]
+    fn parse_player_started() {
+        let line = "EPlayerStarted 1 2";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::PlayerStarted(ps) => {
+                assert_eq!(ps.session_id, 1);
+                assert_eq!(ps.resource_id, 2);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_player_stopped() {
+        let line = "EPlayerStopped 1 2";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::PlayerStopped(ps) => {
+                assert_eq!(ps.session_id, 1);
+                assert_eq!(ps.resource_id, 2);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_player_error() {
+        let line = "EPlayerError 1 2 ErrorText";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::PlayerError(pe) => {
+                assert_eq!(pe.session_id, 1);
+                assert_eq!(pe.resource_id, 2);
+                assert_eq!(pe.error_text, "ErrorText");
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    // --- Recorder Resource Events ---
+
+    #[test]
+    fn parse_recorder_started() {
+        let line = "ERecorderStarted 1 2";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::RecorderStarted(rs) => {
+                assert_eq!(rs.session_id, 1);
+                assert_eq!(rs.resource_id, 2);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_recorder_stopped() {
+        let line = "ERecorderStopped 1 2 ExplicitRequest"; // Reason = ExplicitRequest (example value)
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::RecorderStopped(rs) => {
+                assert_eq!(rs.session_id, 1);
+                assert_eq!(rs.resource_id, 2);
+                assert_eq!(rs.reason.name, "ExplicitRequest");
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_recorder_error() {
+        let line = "ERecorderError 1 2 ErrorText";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::RecorderError(re) => {
+                assert_eq!(re.session_id, 1);
+                assert_eq!(re.resource_id, 2);
+                assert_eq!(re.error_text, "ErrorText");
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_recorder_voice_trigger() {
+        let line = "ERecorderVoiceTrigger 1 2";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::RecorderVoiceTrigger(rvt) => {
+                assert_eq!(rvt.session_id, 1);
+                assert_eq!(rvt.resource_id, 2);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    // --- RTP Channel Resource Events ---
+
+    #[test]
+    fn parse_rtp_channel_started_receiving() {
+        let line = "ERtpChannelStartedReceiving 1 2 receiver.data";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::RtpChannelStartedReceiving(rcsr) => {
+                assert_eq!(rcsr.session_id, 1);
+                assert_eq!(rcsr.resource_id, 2);
+                assert_eq!(rcsr.receiver_data_address, "receiver.data");
+                assert_eq!(rcsr.receiver_control_address, None);
+                assert_eq!(rcsr.rtp_payload_type, None);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_rtp_channel_started_receiving_with_options() {
+        let line = "ERtpChannelStartedReceiving 1 2 receiver.data ReceiverControlAddress=ctrl RtpPayloadType=8";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::RtpChannelStartedReceiving(rcsr) => {
+                assert_eq!(rcsr.session_id, 1);
+                assert_eq!(rcsr.resource_id, 2);
+                assert_eq!(rcsr.receiver_data_address, "receiver.data");
+                assert_eq!(rcsr.receiver_control_address.as_deref(), Some("ctrl"));
+                assert_eq!(rcsr.rtp_payload_type.is_some(), true);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_rtp_channel_started_sending() {
+        let line = "ERtpChannelStartedSending 1 2";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::RtpChannelStartedSending(rcss) => {
+                assert_eq!(rcss.session_id, 1);
+                assert_eq!(rcss.resource_id, 2);
+                assert_eq!(rcss.sender_control_address, None);
+                assert_eq!(rcss.rtp_payload_type, None);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_rtp_channel_started_sending_with_options() {
+        let line = "ERtpChannelStartedSending 1 2 SenderControlAddress=ctrl RtpPayloadType=8";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::RtpChannelStartedSending(rcss) => {
+                assert_eq!(rcss.session_id, 1);
+                assert_eq!(rcss.resource_id, 2);
+                assert_eq!(rcss.sender_control_address.as_deref(), Some("ctrl"));
+                assert_eq!(rcss.rtp_payload_type.is_some(), true);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_rtp_channel_send_dtmf_finished() {
+        let line = "ERtpChannelSendDTMFFinished 1 2";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::RtpChannelSendDTMFFinished(rcsdf) => {
+                assert_eq!(rcsdf.session_id, 1);
+                assert_eq!(rcsdf.resource_id, 2);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_rtp_channel_received_dtmf() {
+        let line = "ERtpChannelReceivedDTMF 1 2 5";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::RtpChannelReceivedDTMF(rcrd) => {
+                assert_eq!(rcrd.session_id, 1);
+                assert_eq!(rcrd.resource_id, 2);
+                assert_eq!(rcrd.key, "5");
+                assert_eq!(rcrd.duration, None);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_rtp_channel_received_dtmf_with_options() {
+        let line = "ERtpChannelReceivedDTMF 1 2 5 Duration=100";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::RtpChannelReceivedDTMF(rcrd) => {
+                assert_eq!(rcrd.session_id, 1);
+                assert_eq!(rcrd.resource_id, 2);
+                assert_eq!(rcrd.key, "5");
+                assert_eq!(rcrd.duration, Some(100));
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_rtp_channel_stopped() {
+        let line = "ERtpChannelStopped 1 2";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::RtpChannelStopped(rcs) => {
+                assert_eq!(rcs.session_id, 1);
+                assert_eq!(rcs.resource_id, 2);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    // --- Sound Device Resource Events ---
+
+    #[test]
+    fn parse_sound_device_started() {
+        let line = "ESoundDeviceStarted 1 2";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::SoundDeviceStarted(sds) => {
+                assert_eq!(sds.session_id, 1);
+                assert_eq!(sds.resource_id, 2);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_sound_device_stopped() {
+        let line = "ESoundDeviceStopped 1 2";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::SoundDeviceStopped(sds) => {
+                assert_eq!(sds.session_id, 1);
+                assert_eq!(sds.resource_id, 2);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_sound_device_error() {
+        let line = "ESoundDeviceError 1 2";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::SoundDeviceError(sde) => {
+                assert_eq!(sde.session_id, 1);
+                assert_eq!(sde.resource_id, 2);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    // --- Fax Resource Events ---
+
+    #[test]
+    fn parse_mode_change_t38() {
+        let line = "EModeChangeT38 1 2";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::ModeChangeT38(mct) => {
+                assert_eq!(mct.session_id, 1);
+                assert_eq!(mct.resource_id, 2);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_mode_change_t38_refused() {
+        let line = "EModeChangeT38Refused 1 2";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::ModeChangeT38Refused(mctr) => {
+                assert_eq!(mctr.session_id, 1);
+                assert_eq!(mctr.resource_id, 2);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_fax_incoming() {
+        let line = "EFaxIncoming 1 2";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::FaxIncoming(fi) => {
+                assert_eq!(fi.session_id, 1);
+                assert_eq!(fi.resource_id, 2);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_facsimile_page_started() {
+        let line = format!("EFacsimilePageStarted 1 2 V27At2400 Legal Low 64");
+        let ev: Event = serde_plain::from_str(&*line).unwrap();
+        match ev {
+            Event::FacsimilePageStarted(fps) => {
+                assert_eq!(fps.session_id, 1);
+                assert_eq!(fps.resource_id, 2);
+                assert_eq!(fps.speed, FaxSendSpeed_V27At2400);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_facsimile_page_received() {
+        let line = "EFacsimilePageReceived 1 2";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::FacsimilePageReceived(fpr) => {
+                assert_eq!(fpr.session_id, 1);
+                assert_eq!(fpr.resource_id, 2);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_facsimile_page_sent() {
+        let line = "EFacsimilePageSent 1 2";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::FacsimilePageSent(fps) => {
+                assert_eq!(fps.session_id, 1);
+                assert_eq!(fps.resource_id, 2);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_fax_operations_started() {
+        let line = "EFaxOperationsStarted 1 2";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::FaxOperationsStarted(fos) => {
+                assert_eq!(fos.session_id, 1);
+                assert_eq!(fos.resource_id, 2);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_fax_operation_failed() {
+        let line = "EFaxOperationFailed 1 2";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::FaxOperationFailed(fof) => {
+                assert_eq!(fof.session_id, 1);
+                assert_eq!(fof.resource_id, 2);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_fax_operation_finished() {
+        let line = "EFaxOperationFinished 1 2";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::FaxOperationFinished(fof) => {
+                assert_eq!(fof.session_id, 1);
+                assert_eq!(fof.resource_id, 2);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_fax_operation_aborted() {
+        let line = "EFaxOperationAborted 1 2";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::FaxOperationAborted(foa) => {
+                assert_eq!(foa.session_id, 1);
+                assert_eq!(foa.resource_id, 2);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    // --- Document Resource Events ---
+
+    #[test]
+    fn parse_document_prepared() {
+        let line = "EDocumentPrepared 1 2";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::DocumentPrepared(dp) => {
+                assert_eq!(dp.session_id, 1);
+                assert_eq!(dp.resource_id, 2);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_document_not_prepared() {
+        let line = "EDocumentNotPrepared 1 2 ReasonText";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::DocumentNotPrepared(dnp) => {
+                assert_eq!(dnp.session_id, 1);
+                assert_eq!(dnp.resource_id, 2);
+                assert_eq!(dnp.reason, "ReasonText");
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_document_saved() {
+        let line = "EDocumentSaved 1 2";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::DocumentSaved(ds) => {
+                assert_eq!(ds.session_id, 1);
+                assert_eq!(ds.resource_id, 2);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_document_not_saved() {
+        let line = "EDocumentNotSaved 1 2 ReasonText";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::DocumentNotSaved(dns) => {
+                assert_eq!(dns.session_id, 1);
+                assert_eq!(dns.resource_id, 2);
+                assert_eq!(dns.reason, "ReasonText");
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
+
+    #[test]
+    fn parse_document_cleared() {
+        let line = "EDocumentCleared 1 2";
+        let ev: Event = serde_plain::from_str(line).unwrap();
+        match ev {
+            Event::DocumentCleared(dc) => {
+                assert_eq!(dc.session_id, 1);
+                assert_eq!(dc.resource_id, 2);
+            }
+            _ => panic!("wrong variant"),
+        }
+    }
 }

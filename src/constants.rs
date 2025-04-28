@@ -339,6 +339,15 @@ impl FromStr for PayloadType {
     }
 }
 
+impl PayloadType {
+    pub fn from_code(code: u8) -> Option<Self> {
+        ALL_PAYLOAD_TYPES
+            .iter()
+            .copied()
+            .find(|p| p.type_code == Some(code))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
