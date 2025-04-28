@@ -1,6 +1,7 @@
 use pyo3::prelude::{PyModule, PyModuleMethods};
 use pyo3::{pyclass, pymethods, Bound, PyResult};
 use std::fmt;
+use crate::primitives::ResourceId;
 
 pub fn init(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let child_module = PyModule::new_bound(parent_module.py(), "commands")?;
@@ -76,19 +77,19 @@ pub struct ResourceCreateDocument;
 #[pyclass]
 #[derive(Clone)]
 pub struct ResourceDelete {
-    resource_id: u32,
+    resource_id: ResourceId,
 }
 #[pyclass]
 #[derive(Clone)]
 pub struct ResourceGetStatus {
-    resource_id: u32,
+    resource_id: ResourceId,
 }
 
 // Front-end Resource Commands
 #[pyclass]
 #[derive(Clone)]
 pub struct CallMake {
-    resource_id: u32,
+    resource_id: ResourceId,
     address: String,
     timeout: Option<u32>, // Default: 30000 ms
     caller_number: Option<String>,
@@ -99,12 +100,12 @@ pub struct CallMake {
 #[pyclass]
 #[derive(Clone)]
 pub struct CallAnswer {
-    resource_id: u32,
+    resource_id: ResourceId,
 }
 #[pyclass]
 #[derive(Clone)]
 pub struct CallClear {
-    resource_id: u32,
+    resource_id: ResourceId,
     reason: Option<String>, // Optional reason string
 }
 #[pyclass]
@@ -117,24 +118,24 @@ pub struct CallTransferConsultation {
 #[pyclass]
 #[derive(Clone)]
 pub struct CallTransferBlind {
-    resource_id: u32,
+    resource_id: ResourceId,
     address: String,
     use_h450: Option<u8>, // Default: 1
 }
 #[pyclass]
 #[derive(Clone)]
 pub struct CallHold {
-    resource_id: u32,
+    resource_id: ResourceId,
 }
 #[pyclass]
 #[derive(Clone)]
 pub struct CallRetrieve {
-    resource_id: u32,
+    resource_id: ResourceId,
 }
 #[pyclass]
 #[derive(Clone)]
 pub struct CallSendDTMF {
-    resource_id: u32,
+    resource_id: ResourceId,
     dtmf_string: String,
     duration: Option<u32>,       // Default: 300 ms
     delay: Option<u32>,          // Default: 200 ms
@@ -143,7 +144,7 @@ pub struct CallSendDTMF {
 #[pyclass]
 #[derive(Clone)]
 pub struct CallStopActivity {
-    resource_id: u32,
+    resource_id: ResourceId,
 }
 #[pyclass]
 #[derive(Clone)]
@@ -154,13 +155,13 @@ pub struct CallT38Relay {
 #[pyclass]
 #[derive(Clone)]
 pub struct CallsSetAlertingType {
-    resource_id: u32,
+    resource_id: ResourceId,
     alerting_type: String,
 }
 #[pyclass]
 #[derive(Clone)]
 pub struct CallsSetAccepting {
-    resource_id: u32,
+    resource_id: ResourceId,
     accepting: bool,
 }
 
@@ -429,19 +430,19 @@ impl Command {
     }
 
     #[staticmethod]
-    pub fn resource_delete(resource_id: u32) -> Self {
+    pub fn resource_delete(resource_id: ResourceId) -> Self {
         Command::ResourceDelete(ResourceDelete { resource_id })
     }
 
     #[staticmethod]
-    pub fn resource_get_status(resource_id: u32) -> Self {
+    pub fn resource_get_status(resource_id: ResourceId) -> Self {
         Command::ResourceGetStatus(ResourceGetStatus { resource_id })
     }
 
     // Front-end Resource Commands
     #[staticmethod]
     pub fn call_make(
-        resource_id: u32,
+        resource_id: ResourceId,
         address: String,
         timeout: Option<u32>,
         caller_number: Option<String>,
@@ -461,12 +462,12 @@ impl Command {
     }
 
     #[staticmethod]
-    pub fn call_answer(resource_id: u32) -> Self {
+    pub fn call_answer(resource_id: ResourceId) -> Self {
         Command::CallAnswer(CallAnswer { resource_id })
     }
 
     #[staticmethod]
-    pub fn call_clear(resource_id: u32, reason: Option<String>) -> Self {
+    pub fn call_clear(resource_id: ResourceId, reason: Option<String>) -> Self {
         Command::CallClear(CallClear {
             resource_id,
             reason,
@@ -482,7 +483,7 @@ impl Command {
     }
 
     #[staticmethod]
-    pub fn call_transfer_blind(resource_id: u32, address: String, use_h450: Option<u8>) -> Self {
+    pub fn call_transfer_blind(resource_id: ResourceId, address: String, use_h450: Option<u8>) -> Self {
         Command::CallTransferBlind(CallTransferBlind {
             resource_id,
             address,
@@ -491,18 +492,18 @@ impl Command {
     }
 
     #[staticmethod]
-    pub fn call_hold(resource_id: u32) -> Self {
+    pub fn call_hold(resource_id: ResourceId) -> Self {
         Command::CallHold(CallHold { resource_id })
     }
 
     #[staticmethod]
-    pub fn call_retrieve(resource_id: u32) -> Self {
+    pub fn call_retrieve(resource_id: ResourceId) -> Self {
         Command::CallRetrieve(CallRetrieve { resource_id })
     }
 
     #[staticmethod]
     pub fn call_send_dtmf(
-        resource_id: u32,
+        resource_id: ResourceId,
         dtmf_string: String,
         duration: Option<u32>,
         delay: Option<u32>,
@@ -518,7 +519,7 @@ impl Command {
     }
 
     #[staticmethod]
-    pub fn call_stop_activity(resource_id: u32) -> Self {
+    pub fn call_stop_activity(resource_id: ResourceId) -> Self {
         Command::CallStopActivity(CallStopActivity { resource_id })
     }
 
@@ -531,7 +532,7 @@ impl Command {
     }
 
     #[staticmethod]
-    pub fn calls_set_alerting_type(resource_id: u32, alerting_type: String) -> Self {
+    pub fn calls_set_alerting_type(resource_id: ResourceId, alerting_type: String) -> Self {
         Command::CallsSetAlertingType(CallsSetAlertingType {
             resource_id,
             alerting_type,
@@ -539,7 +540,7 @@ impl Command {
     }
 
     #[staticmethod]
-    pub fn calls_set_accepting(resource_id: u32, accepting: bool) -> Self {
+    pub fn calls_set_accepting(resource_id: ResourceId, accepting: bool) -> Self {
         Command::CallsSetAccepting(CallsSetAccepting {
             resource_id,
             accepting,
@@ -745,13 +746,13 @@ pub trait CommandHandler: Send + Sync {
     fn resource_create_fax(&mut self) -> PyResult<()>;
     fn resource_create_document(&mut self) -> PyResult<()>;
 
-    fn resource_delete(&mut self, resource_id: u32) -> PyResult<()>;
-    fn resource_get_status(&mut self, resource_id: u32) -> PyResult<()>;
+    fn resource_delete(&mut self, resource_id: ResourceId) -> PyResult<()>;
+    fn resource_get_status(&mut self, resource_id: ResourceId) -> PyResult<()>;
 
     // Front-end Resource Commands
     fn call_make(
         &mut self,
-        resource_id: u32,
+        resource_id: ResourceId,
         address: String,
         timeout: Option<u32>,
         caller_number: Option<String>,
@@ -759,27 +760,27 @@ pub trait CommandHandler: Send + Sync {
         privacy: Option<u8>,
         screen: Option<u8>,
     ) -> PyResult<()>;
-    fn call_answer(&mut self, resource_id: u32) -> PyResult<()>;
-    fn call_clear(&mut self, resource_id: u32, reason: Option<String>) -> PyResult<()>;
+    fn call_answer(&mut self, resource_id: ResourceId) -> PyResult<()>;
+    fn call_clear(&mut self, resource_id: ResourceId, reason: Option<String>) -> PyResult<()>;
     fn call_transfer_consultation(&mut self, resource_id1: u32, resource_id2: u32) -> PyResult<()>;
     fn call_transfer_blind(
         &mut self,
-        resource_id: u32,
+        resource_id: ResourceId,
         address: String,
         use_h450: Option<u8>,
     ) -> PyResult<()>;
-    fn call_hold(&mut self, resource_id: u32) -> PyResult<()>;
-    fn call_retrieve(&mut self, resource_id: u32) -> PyResult<()>;
+    fn call_hold(&mut self, resource_id: ResourceId) -> PyResult<()>;
+    fn call_retrieve(&mut self, resource_id: ResourceId) -> PyResult<()>;
     fn call_send_dtmf(
         &mut self,
-        resource_id: u32,
+        resource_id: ResourceId,
         dtmf_string: String,
         duration: Option<u32>,
         delay: Option<u32>,
         pause_duration: Option<u32>,
     ) -> PyResult<()>;
-    fn call_stop_activity(&mut self, resource_id: u32) -> PyResult<()>;
+    fn call_stop_activity(&mut self, resource_id: ResourceId) -> PyResult<()>;
     fn call_t38_relay(&mut self, resource_id1: u32, resource_id2: u32) -> PyResult<()>;
-    fn calls_set_alerting_type(&mut self, resource_id: u32, alerting_type: String) -> PyResult<()>;
-    fn calls_set_accepting(&mut self, resource_id: u32, accepting: bool) -> PyResult<()>;
+    fn calls_set_alerting_type(&mut self, resource_id: ResourceId, alerting_type: String) -> PyResult<()>;
+    fn calls_set_accepting(&mut self, resource_id: ResourceId, accepting: bool) -> PyResult<()>;
 }
