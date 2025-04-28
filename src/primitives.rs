@@ -18,20 +18,22 @@ impl Channels {
     }
 }
 
-#[repr(u8)]
+#[repr(u16)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ECM {
     No = 0,
     ECM64 = 64,
-    ECM128 = 120,
+    ECM128 = 128,
+    ECM256 = 256,
 }
 
 impl ECM {
-    pub const fn from_u8(value: u8) -> Self {
+    pub const fn from_u16(value: u16) -> Self {
         match value {
             0 => ECM::No,
             64 => ECM::ECM64,
             128 => ECM::ECM128,
+            256 => ECM::ECM256,
             _ => panic!("Invalid value for ECM"),
         }
     }
