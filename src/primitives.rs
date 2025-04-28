@@ -1,9 +1,11 @@
 use std::str::FromStr;
+use pyo3::pyclass;
 
 pub type SessionId = u32;
 pub type ResourceId = u32;
 pub type SampleRate = u16;
 #[repr(u8)]
+#[pyclass]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Channels {
     Mono = 1,
@@ -21,6 +23,7 @@ impl Channels {
 }
 
 #[repr(u16)]
+#[pyclass]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ECM {
     No = 0,
