@@ -1,7 +1,8 @@
 use pyo3::prelude::{PyModule, PyModuleMethods};
 use pyo3::{pyclass, pymethods, Bound, PyResult};
 use std::fmt;
-use crate::primitives::ResourceId;
+use crate::constants::AudioFormatType;
+use crate::primitives::{ResourceId, SampleRate};
 
 pub fn init(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let child_module = PyModule::new_bound(parent_module.py(), "commands")?;
@@ -111,8 +112,8 @@ pub struct CallClear {
 #[pyclass]
 #[derive(Clone)]
 pub struct CallTransferConsultation {
-    resource_id1: u32,
-    resource_id2: u32,
+    resource_id1: ResourceId,
+    resource_id2: ResourceId,
 }
 
 #[pyclass]
@@ -149,8 +150,8 @@ pub struct CallStopActivity {
 #[pyclass]
 #[derive(Clone)]
 pub struct CallT38Relay {
-    resource_id1: u32,
-    resource_id2: u32,
+    resource_id1: ResourceId,
+    resource_id2: ResourceId,
 }
 #[pyclass]
 #[derive(Clone)]
@@ -168,7 +169,12 @@ pub struct CallsSetAccepting {
 // Player Resource Commands
 #[pyclass]
 #[derive(Clone)]
-pub struct PlayFile {}
+pub struct PlayFile {
+    resource_id: ResourceId,
+    file_name: String,
+    audio_type: Option<AudioFormatType>,
+    sample_rate: Option<SampleRate>,
+}
 #[pyclass]
 #[derive(Clone)]
 pub struct PlayStream {}
