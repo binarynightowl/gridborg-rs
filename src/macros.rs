@@ -78,3 +78,32 @@ macro_rules! constant_set {
         }
     };
 }
+
+#[macro_export]
+macro_rules! play_tones {
+    (
+        $( ($ident:ident, $label:literal, $f1:literal, $f2:literal, $on:tt, $off:tt) ),* $(,)?
+    ) => {
+        paste::paste! {
+            $(
+                #[allow(non_upper_case_globals)]
+                pub const [<PlayTone_ $ident>]: $crate::constants::ToneType =
+                    $crate::constants::ToneType {
+                        name: $label,
+                        f1: $f1,
+                        f2: $f2,
+                        on_ms: play_tones!(@opt $on),
+                        off_ms: play_tones!(@opt $off),
+                    };
+            )*
+
+            pub const ALL_PLAY_TONES: &[$crate::constants::ToneType] = &[
+                $( [<PlayTone_ $ident>], )*
+            ];
+        }
+    };
+
+    // helper to turn `_` into None, literal into Some(literal)
+    (@opt _)          => { None };
+    (@opt $n:literal) => { Some($n) };
+}

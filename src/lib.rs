@@ -3,6 +3,7 @@ mod commands;
 mod primitives;
 mod constants;
 mod macros;
+mod events;
 
 use pyo3::prelude::*;
 

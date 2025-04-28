@@ -1,8 +1,8 @@
+use crate::constants::{AudioFormatType, DocumentAddFileTransformation, DocumentPreparePaperSize, DocumentPrepareResolution, FaxReceiveMode, FaxSendSpeed, DocumentSaveType, PayloadType, ToneType};
+use crate::primitives::{Channels, ResourceId, SampleRate, ECM};
 use pyo3::prelude::{PyModule, PyModuleMethods};
 use pyo3::{pyclass, pymethods, Bound, PyResult};
 use std::fmt;
-use crate::constants::AudioFormatType;
-use crate::primitives::{ResourceId, SampleRate};
 
 pub fn init(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let child_module = PyModule::new_bound(parent_module.py(), "commands")?;
@@ -174,102 +174,232 @@ pub struct PlayFile {
     file_name: String,
     audio_type: Option<AudioFormatType>,
     sample_rate: Option<SampleRate>,
+    channels: Option<Channels>,
+    index: Option<u32>,
+    skip_bytes: Option<i64>,
 }
 #[pyclass]
 #[derive(Clone)]
-pub struct PlayStream {}
+pub struct PlayStream {
+    player_id: ResourceId,
+    transport_channel_id: ResourceId,
+    audio_type: Option<AudioFormatType>,
+    sample_rate: Option<SampleRate>,
+    buffer_optimum_size: Option<u32>,
+}
 #[pyclass]
 #[derive(Clone)]
-pub struct PlayTone {}
+pub struct PlayTone {
+    resource_id: ResourceId,
+    frequency: Option<u16>,
+    frequency2: Option<u16>,
+    tone: Option<ToneType>,
+    volume: Option<u8>,
+    duration: Option<u16>,
+}
 #[pyclass]
 #[derive(Clone)]
-pub struct PlayStop {}
+pub struct PlayStop {
+    resource_id: ResourceId,
+}
 
 // Recorder Resource Commands
 #[pyclass]
 #[derive(Clone)]
-pub struct RecorderStartToFile {}
+pub struct RecorderStartToFile {
+    resource_id: ResourceId,
+    file_name: String,
+    audio_type: Option<AudioFormatType>,
+    sample_rate: Option<SampleRate>,
+    channels: Option<Channels>,
+    file_offset: Option<i64>,
+    max_duration: Option<u32>,
+    max_silence: Option<u32>,
+    voice_trigger: Option<bool>,
+    pause_if_empty: Option<bool>,
+}
 #[pyclass]
 #[derive(Clone)]
-pub struct RecorderStartToStream {}
+pub struct RecorderStartToStream {
+    recorder_id: ResourceId,
+    transport_channel_id: ResourceId,
+    audio_type: Option<AudioFormatType>,
+    sample_rate: Option<SampleRate>,
+    max_duration: Option<u32>,
+    max_silence: Option<u32>,
+    voice_trigger: Option<bool>,
+    pause_if_empty: Option<bool>,
+}
 #[pyclass]
 #[derive(Clone)]
-pub struct RecorderStop {}
+pub struct RecorderStop {
+    resource_id: ResourceId,
+}
 
 // RTP Channel Resource Commands
 #[pyclass]
 #[derive(Clone)]
-pub struct RtpChannelStartReceiving {}
+pub struct RtpChannelStartReceiving {
+    resource_id: ResourceId,
+    sender_control_address: Option<String>,
+    receiver_data_address: Option<String>,
+    receiver_control_address: Option<String>,
+    payload_type: Option<PayloadType>,
+    rfc2833_payload_type: Option<u8>,
+    rtp_session_id: Option<u8>,
+    jitter_buffer_length_min: Option<u16>,
+    jitter_buffer_length_max: Option<u16>,
+}
 #[pyclass]
 #[derive(Clone)]
-pub struct RtpChannelStartSending {}
+pub struct RtpChannelStartSending {
+    resource_id: ResourceId,
+    receiver_data_address: String,
+    receiver_control_address: Option<String>,
+    sender_data_address: Option<String>,
+    sender_control_address: Option<String>,
+    payload_type: Option<PayloadType>,
+    rfc2833_payload_type: Option<u8>,
+    rtp_session_id: Option<u8>,
+}
 #[pyclass]
 #[derive(Clone)]
-pub struct RtpChannelStop {}
+pub struct RtpChannelStop {
+    resource_id: ResourceId,
+}
 #[pyclass]
 #[derive(Clone)]
-pub struct RtpChannelSendDTMF {}
+pub struct RtpChannelSendDTMF {
+    resource_id: ResourceId,
+    dtmf_string: String,
+    duration:       Option<u32>,
+    delay:          Option<u32>,
+    pause_duration: Option<u32>,
+}
 
 // Sound device Resource Commands
 #[pyclass]
 #[derive(Clone)]
-pub struct SoundDeviceStart {}
+pub struct SoundDeviceStart {
+    resource_id: ResourceId,
+}
 #[pyclass]
 #[derive(Clone)]
-pub struct SoundDeviceStop {}
+pub struct SoundDeviceStop {
+    resource_id: ResourceId,
+}
 
 // Fax Resource Commands
 #[pyclass]
 #[derive(Clone)]
-pub struct FaxReceive {}
+pub struct FaxReceive {
+    fax_resource_id: ResourceId,
+    frontend_resource_id: ResourceId,
+    document_resource_id: ResourceId,
+    fax_mode: Option<FaxReceiveMode>,
+    use_ecm: Option<ECM>,
+    csi: Option<String>,
+}
 #[pyclass]
 #[derive(Clone)]
-pub struct DocumentResourceId {}
+pub struct FaxSend {
+    fax_resource_id: ResourceId,
+    frontend_resource_id: ResourceId,
+    document_resource_id: ResourceId,
+    speed: Option<FaxSendSpeed>,
+    use_ecm: Option<ECM>,
+    header: Option<String>,
+    tsi: Option<String>,
+}
 #[pyclass]
 #[derive(Clone)]
-pub struct FaxSend {}
-#[pyclass]
-#[derive(Clone)]
-pub struct FaxAbort {}
+pub struct FaxAbort {
+    resource_id: ResourceId,
+}
 
 // Document Resource Commands
 #[pyclass]
 #[derive(Clone)]
-pub struct DocumentAddFile {}
+pub struct DocumentAddFile {
+    resource_id: ResourceId,
+    file_path: String,
+    transformation: Option<DocumentAddFileTransformation>,
+}
 #[pyclass]
 #[derive(Clone)]
-pub struct DocumentPrepare {}
+pub struct DocumentPrepare {
+    resource_id: ResourceId,
+    paper_size: Option<DocumentPreparePaperSize>,
+    resolution: Option<DocumentPrepareResolution>
+}
 #[pyclass]
 #[derive(Clone)]
-pub struct DocumentSave {}
+pub struct DocumentSave {
+    resource_id: ResourceId,
+    file_path: String,
+    multipage: Option<bool>,
+    document_type: Option<DocumentSaveType>
+}
 #[pyclass]
 #[derive(Clone)]
-pub struct DocumentClear {}
+pub struct DocumentClear {
+    resource_id: ResourceId,
+}
 
 // Audio Routing and Audio Stream Monitoring Commands
 #[pyclass]
 #[derive(Clone)]
-pub struct AudioSend {}
+pub struct AudioSend {
+    source_resource_id: ResourceId,
+    sink_resource_id: ResourceId,
+    source_channel: Option<u8>,
+    sink_channel: Option<u8>,
+    volume: Option<i16>,
+    auto_gain: Option<bool>,
+    auto_gain_resolution: Option<u16>,
+    auto_gain_rise_time: Option<u16>,
+    auto_gain_fall_time: Option<u16>,
+    auto_gain_kill_time: Option<u16>,
+}
 #[pyclass]
 #[derive(Clone)]
-pub struct AudioCancel {}
+pub struct AudioCancel {
+    source_resource_id: ResourceId,
+    sink_resource_id: ResourceId,
+}
 #[pyclass]
 #[derive(Clone)]
-pub struct AudioLevelNotificationSend {}
+pub struct AudioLevelNotificationSend {
+    resource_id: ResourceId,
+    resolution: Option<u16>,
+    voice_dead_band: Option<u16>,
+    silence_dead_band: Option<u16>,
+    adaptive_period: Option<u16>,
+    voice_timer: Option<u16>,
+    silence_timer: Option<u16>,
+}
 #[pyclass]
 #[derive(Clone)]
-pub struct AudioLevelNotificationCancel {}
+pub struct AudioLevelNotificationCancel {
+    resource_id: ResourceId,
+}
 #[pyclass]
 #[derive(Clone)]
-pub struct InBandSignalingDetectionEnable {}
+pub struct InBandSignalingDetectionEnable {
+    resource_id: ResourceId,
+}
 #[pyclass]
 #[derive(Clone)]
-pub struct InBandSignalingDetectionDisable {}
+pub struct InBandSignalingDetectionDisable {
+    resource_id: ResourceId,
+}
 
 // Miscellaneous Commands
 #[pyclass]
 #[derive(Clone)]
-pub struct GetRtpStatistics {}
+pub struct GetRtpStatistics {
+    resource_id: ResourceId,
+}
 
 #[pyclass(str)]
 #[derive(Clone)]
@@ -315,7 +445,6 @@ pub enum Command {
     SoundDeviceStart(SoundDeviceStart),
     SoundDeviceStop(SoundDeviceStop),
     FaxReceive(FaxReceive),
-    DocumentResourceId(DocumentResourceId),
     FaxSend(FaxSend),
     FaxAbort(FaxAbort),
     DocumentAddFile(DocumentAddFile),
@@ -489,7 +618,11 @@ impl Command {
     }
 
     #[staticmethod]
-    pub fn call_transfer_blind(resource_id: ResourceId, address: String, use_h450: Option<u8>) -> Self {
+    pub fn call_transfer_blind(
+        resource_id: ResourceId,
+        address: String,
+        use_h450: Option<u8>,
+    ) -> Self {
         Command::CallTransferBlind(CallTransferBlind {
             resource_id,
             address,
@@ -787,6 +920,10 @@ pub trait CommandHandler: Send + Sync {
     ) -> PyResult<()>;
     fn call_stop_activity(&mut self, resource_id: ResourceId) -> PyResult<()>;
     fn call_t38_relay(&mut self, resource_id1: u32, resource_id2: u32) -> PyResult<()>;
-    fn calls_set_alerting_type(&mut self, resource_id: ResourceId, alerting_type: String) -> PyResult<()>;
+    fn calls_set_alerting_type(
+        &mut self,
+        resource_id: ResourceId,
+        alerting_type: String,
+    ) -> PyResult<()>;
     fn calls_set_accepting(&mut self, resource_id: ResourceId, accepting: bool) -> PyResult<()>;
 }

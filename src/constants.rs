@@ -1,7 +1,7 @@
-use crate::{audio_formats, constant_set, payload_types};
+use crate::primitives::{Channels, SampleRate};
+use crate::{audio_formats, constant_set, payload_types, play_tones};
 use paste::paste;
 use pyo3::pyclass;
-use crate::primitives::{Channels, SampleRate};
 
 #[pyclass]
 #[derive(Clone)]
@@ -36,6 +36,26 @@ pub struct PayloadType {
 pub struct ConstantWithDescription {
     pub name: &'static str,
     pub description: &'static str,
+}
+pub type CallEndReason = ConstantWithDescription;
+pub type AlertingType = ConstantWithDescription;
+pub type RecorderStopReason = ConstantWithDescription;
+pub type EStreamBufferStateNotification = ConstantWithDescription;
+pub type FaxSendSpeed = ConstantWithDescription;
+pub type FaxReceiveMode = ConstantWithDescription;
+pub type DocumentPreparePaperSize = ConstantWithDescription;
+pub type DocumentPrepareResolution = ConstantWithDescription;
+pub type DocumentAddFileTransformation = ConstantWithDescription;
+pub type DocumentSaveType = ConstantWithDescription;
+
+#[pyclass]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ToneType {
+    pub name: &'static str,
+    pub f1: u16,
+    pub f2: u16,
+    pub on_ms: Option<u16>,
+    pub off_ms: Option<u16>,
 }
 
 audio_formats! {
@@ -119,7 +139,7 @@ payload_types! {
 }
 
 constant_set! {
-    type   = ConstantWithDescription,
+    type   = CallEndReason,
     prefix = CallEndReason,
     slice  = ALL_CALL_END_REASONS,
 
@@ -152,7 +172,7 @@ constant_set! {
 }
 
 constant_set! {
-    type   = ConstantWithDescription,
+    type   = AlertingType,
     prefix = AlertingType,
     slice  = ALL_ALERTING_TYPES,
 
@@ -162,7 +182,7 @@ constant_set! {
 }
 
 constant_set! {
-    type   = ConstantWithDescription,
+    type   = RecorderStopReason,
     prefix = RecorderStopReason,
     slice  = ALL_RECORDER_STOP_REASONS,
 
@@ -172,7 +192,7 @@ constant_set! {
 }
 
 constant_set! {
-    type   = ConstantWithDescription,
+    type   = EStreamBufferStateNotification,
     prefix = EStreamBufferStateNotification,
     slice  = ALL_ESTREAM_BUFFER_STATE_NOTIFICATIONS,
 
@@ -182,7 +202,7 @@ constant_set! {
 }
 
 constant_set! {
-    type   = ConstantWithDescription,
+    type   = FaxSendSpeed,
     prefix = FaxSendSpeed,
     slice  = ALL_FAX_SEND_SPEEDS,
 
@@ -197,7 +217,7 @@ constant_set! {
 }
 
 constant_set! {
-    type   = ConstantWithDescription,
+    type   = FaxReceiveMode,
     prefix = FaxReceiveMode,
     slice  = ALL_FAX_RECEIVE_MODES,
 
@@ -208,7 +228,7 @@ constant_set! {
 }
 
 constant_set! {
-    type   = ConstantWithDescription,
+    type   = DocumentPreparePaperSize,
     prefix = DocumentPreparePaperSize,
     slice  = ALL_DOCUMENT_PREPARE_PAPER_SIZES,
 
@@ -220,7 +240,7 @@ constant_set! {
 }
 
 constant_set! {
-    type   = ConstantWithDescription,
+    type   = DocumentPrepareResolution,
     prefix = DocumentPrepareResolution,
     slice  = ALL_DOCUMENT_PREPARE_RESOLUTIONS,
 
@@ -229,7 +249,7 @@ constant_set! {
 }
 
 constant_set! {
-    type   = ConstantWithDescription,
+    type   = DocumentAddFileTransformation,
     prefix = DocumentAddFileTransformation,
     slice  = ALL_DOCUMENT_ADD_FILE_TRANSFORMATIONS,
 
@@ -239,7 +259,7 @@ constant_set! {
 }
 
 constant_set! {
-    type   = ConstantWithDescription,
+    type   = DocumentSaveType,
     prefix = DocumentSaveType,
     slice  = ALL_DOCUMENT_SAVE_TYPES,
 
@@ -249,6 +269,35 @@ constant_set! {
     (PNG, "PNG image format."),
     (BMP, "MS Windows image format."),
     (GIF, "GIF image format."),
+}
+
+play_tones! {
+    // DTMF digits
+    (DTMF_1      , "DTMF tone \"1\""    , 697 , 1209 , _   , _   ),
+    (DTMF_2      , "DTMF tone \"2\""    , 697 , 1336 , _   , _   ),
+    (DTMF_3      , "DTMF tone \"3\""    , 697 , 1477 , _   , _   ),
+    (DTMF_4      , "DTMF tone \"4\""    , 770 , 1209 , _   , _   ),
+    (DTMF_5      , "DTMF tone \"5\""    , 770 , 1336 , _   , _   ),
+    (DTMF_6      , "DTMF tone \"6\""    , 770 , 1477 , _   , _   ),
+    (DTMF_7      , "DTMF tone \"7\""    , 852 , 1209 , _   , _   ),
+    (DTMF_8      , "DTMF tone \"8\""    , 852 , 1336 , _   , _   ),
+    (DTMF_9      , "DTMF tone \"9\""    , 852 , 1477 , _   , _   ),
+    (DTMF_STAR   , "DTMF tone \"*\""    , 941 , 1209 , _   , _   ),
+    (DTMF_0      , "DTMF tone \"0\""    , 941 , 1336 , _   , _   ),
+    (DTMF_HASH   , "DTMF tone \"#\""    , 941 , 1477 , _   , _   ),
+    (DTMF_A      , "DTMF tone \"A\""    , 697 , 1633 , _   , _   ),
+    (DTMF_B      , "DTMF tone \"B\""    , 770 , 1633 , _   , _   ),
+    (DTMF_C      , "DTMF tone \"C\""    , 852 , 1633 , _   , _   ),
+    (DTMF_D      , "DTMF tone \"D\""    , 941 , 1633 , _   , _   ),
+
+    // special system tones
+    (BusyTone            , "Line is busy"                             , 480 , 620  , 500  , 500   ),
+    (DialTone            , "Dial tone"                                 , 350 , 440  , _    , _     ),
+    (RingBackTone        , "Ring-back tone"                            , 440 , 480  , 2000 , 4000  ),
+    (RecorderWarningTone , "2-way conversation is being recorded"      , 1440, 0    , 500  , 14500 ),
+    (RecorderConnectedTone, "Connected to answering machine—leave a message", 440, 0 , 500  , 4500  ),
+    (CallWaitingTone     , "New incoming call (-13db)"                 , 440 , 0    , 300  , 9700  ),
+    (ReorderTone         , "Reorder tone"                              , 480 , 620  , 300  , 200   ),
 }
 
 #[cfg(test)]
