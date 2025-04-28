@@ -23,11 +23,7 @@ serde_plain = "1.0.2"
 
 [dependencies.pyo3]
 version = "0.24.2"
-features = ["auto-initialize"]
 
 [features]
 extension-module = ["pyo3/extension-module"]
 default = []
-
-[dev-dependencies]
-gridborg-rs = { path = "." }
