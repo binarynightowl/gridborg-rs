@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 pub type SessionId = u32;
 pub type ResourceId = u32;
 pub type SampleRate = u16;
@@ -36,5 +38,14 @@ impl ECM {
             256 => ECM::ECM256,
             _ => panic!("Invalid value for ECM"),
         }
+    }
+}
+
+impl FromStr for ECM {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let parsed: u16 = s.parse().map_err(|_| ())?;
+        Ok(ECM::from_u16(parsed))
     }
 }

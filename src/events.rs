@@ -405,7 +405,7 @@ enum Event {
     DocumentPrepared(DocumentPrepared),
     DocumentNotPrepared(DocumentNotPrepared),
     DocumentSaved(DocumentSaved),
-    DocumentNotSaved(DocumentCleared),
+    DocumentNotSaved(DocumentNotSaved),
     DocumentCleared(DocumentCleared),
 }
 
@@ -444,6 +444,7 @@ fn parse_event(line: &str) -> Result<Event, ParseEventError> {
     let name = tokens[0];
 
     match name {
+        // Session, Resource and Notification Events
         "ESessionCreated" => {
             let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
             Ok(Event::SessionCreated(SessionCreated { session_id }))
@@ -490,6 +491,7 @@ fn parse_event(line: &str) -> Result<Event, ParseEventError> {
                 state,
             }))
         }
+        // Front-end Events
         "ECallIncoming" => {
             let session_id     = parse_pos::<SessionId>(&tokens, 1, name)?;
             let resource_id    = parse_pos::<ResourceId>(&tokens, 2, name)?;
@@ -517,6 +519,365 @@ fn parse_event(line: &str) -> Result<Event, ParseEventError> {
                 remote_address,
             }))
         }
+        "ECallOutgoing" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            let address = tokens.get(3).ok_or(ParseEventError::WrongArity(name.into()))?.to_string();
+            let call_identifier = tokens.get(4).ok_or(ParseEventError::WrongArity(name.into()))?.to_string();
+            Ok(Event::CallOutgoing(CallOutgoing {
+                session_id,
+                resource_id,
+                address,
+                call_identifier,
+            }))
+        }
+        "ECallRemoteAlerting" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            let opts = parse_opts(&tokens, 3);
+            let user = opts.get("user").cloned();
+            Ok(Event::CallRemoteAlerting(CallRemoteAlerting {
+                session_id,
+                resource_id,
+                user,
+            }))
+        }
+        "ECallConnectionEstablished" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            Ok(Event::CallConnectionEstablished(CallConnectionEstablished {
+                session_id,
+                resource_id,
+            }))
+        }
+        "ECallConnectionFailed" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            let reason = tokens.get(3).ok_or(ParseEventError::WrongArity(name.into()))?.to_string();
+            let opts = parse_opts(&tokens, 4);
+            let protocol_specific_reason = opts.get("protocolspecificreason").cloned();
+            Ok(Event::CallConnectionFailed(CallConnectionFailed {
+                session_id,
+                resource_id,
+                reason,
+                protocol_specific_reason,
+            }))
+        }
+        "ECallCleared" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            let reason = tokens.get(3).ok_or(ParseEventError::WrongArity(name.into()))?.to_string();
+            let opts = parse_opts(&tokens, 4);
+            let protocol_specific_reason = opts.get("protocolspecificreason").cloned();
+            Ok(Event::CallCleared(CallCleared {
+                session_id,
+                resource_id,
+                reason,
+                protocol_specific_reason,
+            }))
+        }
+        "ECallSendDTMFFinished" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            Ok(Event::CallSendDTMFFinished(CallSendDTMFFinished {
+                session_id,
+                resource_id,
+            }))
+        }
+        "ECallKeyPress" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            let key = tokens.get(3).ok_or(ParseEventError::WrongArity(name.into()))?.to_string();
+            let opts = parse_opts(&tokens, 4);
+            let duration = opts.get("duration").map(|v| v.parse().unwrap_or(0));
+            Ok(Event::CallKeyPress(CallKeyPress {
+                session_id,
+                resource_id,
+                key,
+                duration,
+            }))
+        }
+        // Player Resource Events
+        "EPlayerStarted" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            Ok(Event::PlayerStarted(PlayerStarted {
+                session_id,
+                resource_id,
+            }))
+        }
+        "EPlayerStopped" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            Ok(Event::PlayerStopped(PlayerStopped {
+                session_id,
+                resource_id,
+            }))
+        }
+        "EPlayerError" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            let error_text = tokens.get(3).ok_or(ParseEventError::WrongArity(name.into()))?.to_string();
+            Ok(Event::PlayerError(PlayerError {
+                session_id,
+                resource_id,
+                error_text,
+            }))
+        }
+        // Recorder Resource Events
+        "ERecorderStarted" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            Ok(Event::RecorderStarted(RecorderStarted {
+                session_id,
+                resource_id,
+            }))
+        }
+        "ERecorderStopped" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            let reason = parse_pos::<RecorderStopReason>(&tokens, 3, name)?;
+            Ok(Event::RecorderStopped(RecorderStopped {
+                session_id,
+                resource_id,
+                reason,
+            }))
+        }
+        "ERecorderError" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            let error_text = tokens.get(3).ok_or(ParseEventError::WrongArity(name.into()))?.to_string();
+            Ok(Event::RecorderError(RecorderError {
+                session_id,
+                resource_id,
+                error_text,
+            }))
+        }
+        "ERecorderVoiceTrigger" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            Ok(Event::RecorderVoiceTrigger(RecorderVoiceTrigger {
+                session_id,
+                resource_id,
+            }))
+        }
+        // RTP Channel Resource Events
+        "ERtpChannelStartedReceiving" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            let receiver_data_address = tokens.get(3).ok_or(ParseEventError::WrongArity(name.into()))?.to_string();
+            let opts = parse_opts(&tokens, 4);
+            let receiver_control_address = opts.get("receivercontroladdress").cloned();
+            let rtp_payload_type = opts.get("rtppayloadtype").map(|v| v.parse().unwrap());
+            Ok(Event::RtpChannelStartedReceiving(RtpChannelStartedReceiving {
+                session_id,
+                resource_id,
+                receiver_data_address,
+                receiver_control_address,
+                rtp_payload_type,
+            }))
+        }
+        "ERtpChannelStartedSending" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            let opts = parse_opts(&tokens, 3);
+            let sender_control_address = opts.get("sendercontroladdress").cloned();
+            let rtp_payload_type = opts.get("rtppayloadtype").map(|v| v.parse().unwrap());
+            Ok(Event::RtpChannelStartedSending(RtpChannelStartedSending {
+                session_id,
+                resource_id,
+                sender_control_address,
+                rtp_payload_type,
+            }))
+        }
+        "ERtpChannelSendDTMFFinished" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            Ok(Event::RtpChannelSendDTMFFinished(RtpChannelSendDTMFFinished {
+                session_id,
+                resource_id,
+            }))
+        }
+        "ERtpChannelReceivedDTMF" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            let key = tokens.get(3).ok_or(ParseEventError::WrongArity(name.into()))?.to_string();
+            let opts = parse_opts(&tokens, 4);
+            let duration = opts.get("duration").map(|v| v.parse().unwrap());
+            Ok(Event::RtpChannelReceivedDTMF(RtpChannelReceivedDTMF {
+                session_id,
+                resource_id,
+                key,
+                duration,
+            }))
+        }
+        "ERtpChannelStopped" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            Ok(Event::RtpChannelStopped(RtpChannelStopped {
+                session_id,
+                resource_id,
+            }))
+        },
+        // Sound Device Resource Events
+        "ESoundDeviceStarted" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            Ok(Event::SoundDeviceStarted(SoundDeviceStarted {
+                session_id,
+                resource_id,
+            }))
+        }
+        "ESoundDeviceStopped" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            Ok(Event::SoundDeviceStopped(SoundDeviceStopped {
+                session_id,
+                resource_id,
+            }))
+        }
+        "ESoundDeviceError" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            Ok(Event::SoundDeviceError(SoundDeviceError {
+                session_id,
+                resource_id,
+            }))
+        }
+        // Fax Resource Events
+        "EModeChangeT38" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            Ok(Event::ModeChangeT38(ModeChangeT38 {
+                session_id,
+                resource_id,
+            }))
+        }
+        "EModeChangeT38Refused" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            Ok(Event::ModeChangeT38Refused(ModeChangeT38Refused {
+                session_id,
+                resource_id,
+            }))
+        }
+        "EFaxIncoming" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            Ok(Event::FaxIncoming(FaxIncoming {
+                session_id,
+                resource_id,
+            }))
+        }
+        "EFacsimilePageStarted" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            let speed = parse_pos::<FaxSendSpeed>(&tokens, 3, name)?;
+            let paper_size = parse_pos::<DocumentPreparePaperSize>(&tokens, 4, name)?;
+            let resolution = parse_pos::<DocumentPrepareResolution>(&tokens, 5, name)?;
+            let ecm = parse_pos::<ECM>(&tokens, 6, name)?;
+            Ok(Event::FacsimilePageStarted(FacsimilePageStarted {
+                session_id,
+                resource_id,
+                speed,
+                paper_size,
+                resolution,
+                ecm,
+            }))
+        }
+        "EFacsimilePageReceived" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            Ok(Event::FacsimilePageReceived(FacsimilePageReceived {
+                session_id,
+                resource_id,
+            }))
+        }
+        "EFacsimilePageSent" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            Ok(Event::FacsimilePageSent(FacsimilePageSent {
+                session_id,
+                resource_id,
+            }))
+        }
+        "EFaxOperationsStarted" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            Ok(Event::FaxOperationsStarted(FaxOperationsStarted {
+                session_id,
+                resource_id,
+            }))
+        }
+        "EFaxOperationFailed" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            Ok(Event::FaxOperationFailed(FaxOperationFailed {
+                session_id,
+                resource_id,
+            }))
+        }
+        "EFaxOperationFinished" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            Ok(Event::FaxOperationFinished(FaxOperationFinished {
+                session_id,
+                resource_id,
+            }))
+        }
+        "EFaxOperationAborted" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            Ok(Event::FaxOperationAborted(FaxOperationAborted {
+                session_id,
+                resource_id,
+            }))
+        }
+        // Document Resource Events
+        "EDocumentPrepared" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            Ok(Event::DocumentPrepared(DocumentPrepared {
+                session_id,
+                resource_id,
+            }))
+        }
+        "EDocumentNotPrepared" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            let reason = tokens.get(3).ok_or(ParseEventError::WrongArity(name.into()))?.to_string();
+            Ok(Event::DocumentNotPrepared(DocumentNotPrepared {
+                session_id,
+                resource_id,
+                reason,
+            }))
+        }
+        "EDocumentSaved" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            Ok(Event::DocumentSaved(DocumentSaved {
+                session_id,
+                resource_id,
+            }))
+        }
+        "EDocumentNotSaved" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            let reason = tokens.get(3).ok_or(ParseEventError::WrongArity(name.into()))?.to_string();
+            Ok(Event::DocumentNotSaved(DocumentNotSaved {
+                session_id,
+                resource_id,
+                reason,
+            }))
+        }
+        "EDocumentCleared" => {
+            let session_id = parse_pos::<SessionId>(&tokens, 1, name)?;
+            let resource_id = parse_pos::<ResourceId>(&tokens, 2, name)?;
+            Ok(Event::DocumentCleared(DocumentCleared {
+                session_id,
+                resource_id,
+            }))
+        }
         _ => Err(ParseEventError::UnknownEvent(name.into())),
     }
 }
@@ -525,6 +886,7 @@ fn parse_event(line: &str) -> Result<Event, ParseEventError> {
 mod tests {
     use super::*;
 
+    // Session, Resource and Notification Events
     #[test]
     fn parse_session_created() {
         let line = "ESessionCreated 1";
@@ -548,6 +910,7 @@ mod tests {
         }
     }
 
+    // Front-end Events
     #[test]
     fn parse_call_incoming() {
         let line = "ECallIncoming 1 1 CALL123";
@@ -586,4 +949,11 @@ mod tests {
             _ => panic!("wrong variant"),
         }
     }
+
+    // Player Resource Events
+    // Recorder Resource Events
+    // RTP Channel Resource Events
+    // Sound Device Resource Events
+    // Fax Resource Events
+    // Document Resource Events
 }

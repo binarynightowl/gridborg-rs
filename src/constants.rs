@@ -327,6 +327,18 @@ impl FromStr for ConstantWithDescription {
     }
 }
 
+impl FromStr for PayloadType {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        ALL_PAYLOAD_TYPES
+            .iter()
+            .find(|p| p.name.eq_ignore_ascii_case(s))
+            .copied()
+            .ok_or(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
