@@ -1,4 +1,8 @@
-use crate::constants::{AudioFormatType, DocumentAddFileTransformation, DocumentPreparePaperSize, DocumentPrepareResolution, FaxReceiveMode, FaxSendSpeed, DocumentSaveType, PayloadType, ToneType};
+use crate::constants::{
+    AudioFormatType, DocumentAddFileTransformation, DocumentPreparePaperSize,
+    DocumentPrepareResolution, DocumentSaveType, FaxReceiveMode, FaxSendSpeed, PayloadType,
+    ToneType,
+};
 use crate::primitives::{Channels, ResourceId, SampleRate, ECM};
 use pyo3::prelude::{PyModule, PyModuleMethods};
 use pyo3::{pyclass, pymethods, Bound, PyResult};
@@ -272,8 +276,8 @@ pub struct RtpChannelStop {
 pub struct RtpChannelSendDTMF {
     resource_id: ResourceId,
     dtmf_string: String,
-    duration:       Option<u32>,
-    delay:          Option<u32>,
+    duration: Option<u32>,
+    delay: Option<u32>,
     pause_duration: Option<u32>,
 }
 
@@ -330,7 +334,7 @@ pub struct DocumentAddFile {
 pub struct DocumentPrepare {
     resource_id: ResourceId,
     paper_size: Option<DocumentPreparePaperSize>,
-    resolution: Option<DocumentPrepareResolution>
+    resolution: Option<DocumentPrepareResolution>,
 }
 #[pyclass]
 #[derive(Clone)]
@@ -338,7 +342,7 @@ pub struct DocumentSave {
     resource_id: ResourceId,
     file_path: String,
     multipage: Option<bool>,
-    document_type: Option<DocumentSaveType>
+    document_type: Option<DocumentSaveType>,
 }
 #[pyclass]
 #[derive(Clone)]
